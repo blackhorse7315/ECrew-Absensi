@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>E Crew Attendant List - Transwisata Prima Aviation</title>
+    <title>E Crew Attendant List - Transwisata Prima Aviation
+</title>
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1303,6 +1304,13 @@
                     name: 'Administrator'
                 };
                 showView('admin');
+            } else if (uInput === 'news' && pInput === 'news119-021') {
+                currentUser = {
+                    id: 'news-admin-001',
+                    role: 'news_admin',
+                    name: 'Admin Berita & Info'
+                };
+                showView('admin');
             } else {
                 const foundUser = users.find(u => u.username === uInput && u.password === pInput);
                 if (foundUser) {
@@ -1342,7 +1350,22 @@
                 document.getElementById('app-content').classList.remove('hidden-element');
                 if (view === 'admin') {
                     document.getElementById('admin-view').classList.remove('hidden-element');
-                    setAdminTab('users');
+                    
+                    if (currentUser && currentUser.role === 'news_admin') {
+                        document.getElementById('admin-tab-users').classList.add('hidden-element');
+                        document.getElementById('admin-tab-all-logs').classList.add('hidden-element');
+                        document.getElementById('admin-tab-links').classList.add('hidden-element');
+                        document.getElementById('admin-tab-worklists').classList.add('hidden-element');
+                        document.getElementById('admin-tab-config').classList.add('hidden-element');
+                        setAdminTab('news');
+                    } else {
+                        document.getElementById('admin-tab-users').classList.remove('hidden-element');
+                        document.getElementById('admin-tab-all-logs').classList.remove('hidden-element');
+                        document.getElementById('admin-tab-links').classList.remove('hidden-element');
+                        document.getElementById('admin-tab-worklists').classList.remove('hidden-element');
+                        document.getElementById('admin-tab-config').classList.remove('hidden-element');
+                        setAdminTab('users');
+                    }
                 } else {
                     document.getElementById('btn-my-profile').classList.remove('hidden-element');
                     document.getElementById('user-attendance-view').classList.remove('hidden-element');
