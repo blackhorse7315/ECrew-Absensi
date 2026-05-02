@@ -2514,34 +2514,27 @@
 
         // INITIALIZATION
         function initPWA() {
-            const manifestEl = document.getElementById('pwa-manifest'),
-                manifest = {
-                    name: "E Crew Attendant List",
-                    short_name: "E-Crew",
-                    start_url: window.location.href.split('#')[0].split('?')[0],
-                    display: "standalone",
-                    background_color: "#0f172a",
-                    theme_color: "#0f172a",
-                    icons: [{
-                        src: "https://lh3.googleusercontent.com/d/14XvFbNETCuybdeUeH6BPrPaC33uBijMc",
-                        sizes: "192x192",
-                        type: "image/png",
-                        purpose: "any maskable"
-                    }, {
-                        src: "https://lh3.googleusercontent.com/d/14XvFbNETCuybdeUeH6BPrPaC33uBijMc",
-                        sizes: "512x512",
-                        type: "image/png",
-                        purpose: "any maskable"
-                    }]
-                };
-            manifestEl.setAttribute('href', 'data:application/manifest+json,' + JSON.stringify(manifest));
+            const manifestData = {
+                "name": "ECrew Absensi", 
+                "short_name": "Absensi", 
+                "start_url": ".", 
+                "display": "standalone",
+                "background_color": "#0f172a", 
+                "theme_color": "#0f172a",
+                "icons": [ { "src": "https://lh3.googleusercontent.com/d//1WNcGjsZ9_Fp54xzOl01EYRqM6-wY5Zh7", "sizes": "192x192 512x512", "type": "image/png", "purpose": "any" } ]
+            };
+            const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+            const manifestLink = document.getElementById('pwa-manifest');
+            if (manifestLink) manifestLink.href = URL.createObjectURL(manifestBlob);
 
-            // Register Service Worker (Required for Chrome Install Prompt)
             if ('serviceWorker' in navigator) {
-                const swCode = `self.addEventListener('fetch', function(event) {});`;
-                const blob = new Blob([swCode], { type: 'text/javascript' });
-                const url = URL.createObjectURL(blob);
-                navigator.serviceWorker.register(url).catch(() => {});
+                const swCode = `
+                    self.addEventListener('install', (e) => { self.skipWaiting(); }); 
+                    self.addEventListener('activate', (e) => { e.waitUntil(clients.claim()); }); 
+                    self.addEventListener('fetch', (e) => { });
+                `;
+                const swBlob = new Blob([swCode], {type: 'application/javascript'});
+                navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(console.warn);
             }
         }
 
