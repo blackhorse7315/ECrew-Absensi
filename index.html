@@ -503,8 +503,8 @@
                 </div>
             </div>
 
-            <!-- Action Buttons (Attendance) -->
-            <div id="main-actions" class="grid grid-cols-2 gap-4 mb-4">
+            <!-- Action Buttons -->
+            <div id="main-actions" class="grid grid-cols-2 gap-4 mb-8">
                 <button id="btn-open-checkin" onclick="openForm('check-in')" class="flex flex-col items-center justify-center bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-all active:scale-95 group">
                     <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-all">
                         <i class="fas fa-fingerprint text-2xl"></i>
@@ -517,22 +517,6 @@
                     </div>
                     <span class="font-bold text-slate-700">Check Out</span>
                 </button>
-            </div>
-
-            <!-- Secondary Actions (Cuti & Personal Data) -->
-            <div id="secondary-actions" class="grid grid-cols-2 gap-4 mb-8">
-                <a href="https://blackhorse7315.github.io/ECrew-Leaves/" target="_blank" class="flex flex-col items-center justify-center bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-all active:scale-95 group">
-                    <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-all">
-                        <i class="fas fa-calendar-day text-2xl"></i>
-                    </div>
-                    <span class="font-bold text-slate-700">Cuti</span>
-                </a>
-                <a href="https://blackhorse7315.github.io/Transwisata-CV/" target="_blank" class="flex flex-col items-center justify-center bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-all active:scale-95 group">
-                    <div class="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-purple-600 group-hover:text-white transition-all">
-                        <i class="fas fa-id-card text-2xl"></i>
-                    </div>
-                    <span class="font-bold text-slate-700 text-center text-xs px-1">Personal Data</span>
-                </a>
             </div>
 
             <!-- Attendance Form -->
@@ -1465,9 +1449,11 @@
             updateUI();
         }
 
-        window.deleteNewsItem = function(idx) {
-            if (confirm("Hapus berita ini?")) {
-                newsItems.splice(idx, 1);
+        window.deleteNewsItem = async function(idx) {
+            if (confirm("Hapus berita ini secara permanen dari server?")) {
+                const item = newsItems[idx];
+                await callCloud("deleteNews", { id: item.id });
+                // Sinkronisasi otomatis dilakukan di dalam callCloud
                 renderNewsAdmin();
                 updateUI();
             }
@@ -1836,11 +1822,14 @@
             renderUserList();
         }
 
-        window.handleDeleteUser = function() {
-            const id = parseFloat(document.getElementById('edit-user-id').value);
-            users = users.filter(u => u.id !== id);
-            closeUserForm();
-            renderUserList();
+        window.handleDeleteUser = async function() {
+            const idInput = document.getElementById('edit-user-id').value;
+            if (!idInput) return;
+            if (confirm("Hapus karyawan ini secara permanen dari server?")) {
+                await callCloud("deleteUser", { id: parseFloat(idInput) });
+                closeUserForm();
+                renderUserList();
+            }
         };
 
         // USER FUNCTIONS
@@ -1848,7 +1837,7 @@
             currentMode = mode;
             workPhotoBase64 = null;
             document.getElementById('main-actions').classList.add('hidden-element');
-            document.getElementById('secondary-actions').classList.add('hidden-element'); // Hide secondary buttons
+            // document.getElementById('secondary-actions').classList.add('hidden-element'); // Hide secondary buttons (if applicable)
             document.getElementById('status-banner').classList.add('hidden-element');
             document.getElementById('user-info-section').classList.add('hidden-element');
             document.getElementById('birthday-section').classList.add('hidden-element');
@@ -1942,7 +1931,6 @@
 
         window.closeForm = function() {
             document.getElementById('main-actions').classList.remove('hidden-element');
-            document.getElementById('secondary-actions').classList.remove('hidden-element'); // Show secondary buttons
             if (isWorking) document.getElementById('status-banner').classList.remove('hidden-element');
             document.getElementById('form-container').classList.add('hidden-element');
             document.getElementById('form-error-msg').classList.add('hidden-element');
@@ -2389,7 +2377,7 @@
         };
 
         window.deleteLog = async function(id) {
-            if (confirm("Hapus data absen ini secara permanen?")) {
+            if (confirm("Hapus data absen ini secara permanen dari server?")) {
                 await callCloud("deleteLog", {
                     id
                 });
@@ -2454,7 +2442,7 @@
                     cd = new Date(s.checkIn.timestamp);
                 cd.setHours(h, m, 0, 0);
                 s.checkOut.timestamp = cd.getTime();
-                s.checkOut.overtimeLabel = calculateOvertimeDuration(s.checkOut.timestamp);
+                s.checkOut.overtimeLabel = calculateOvertimeDuration(s.checkOut.timestamp)
             }
             await callCloud("saveLog", s);
             closeLogEdit();
