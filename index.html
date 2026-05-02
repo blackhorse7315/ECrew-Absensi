@@ -772,7 +772,7 @@
                     <input type="text" id="reg-name" class="w-full p-4 bg-slate-50 rounded-2xl outline-none text-sm font-bold border border-slate-100">
                 </div>
                 <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase mb-2 block">Tanggal Lahir</label>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase mb-2 block">Tanggal Lahir (Date of Birth)</label>
                     <input type="date" id="reg-dob" class="w-full p-4 bg-slate-50 rounded-2xl outline-none text-sm font-bold border border-slate-100">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
@@ -930,7 +930,7 @@
     </div>
 
     <script>
-        const webAppUrl = "https://script.google.com/macros/s/AKfycbxdJvW6nbV6yFHy4jj_3mgnZ_oA-JirtG9DXuA_syvdk53cPm5wEsBy6mtFQxjhu3XhJg/exec";
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbzcMxcJA_hmS5Mw9mLva6g98uhXUeuPskVIN5sme22-6ixEE0E6iGMa0YKqTSu0IVqBXg/exec";
 
         // APP STATE
         let users = [];
@@ -1748,8 +1748,16 @@
                     document.getElementById('reg-name').value = u.name;
                     const dobInput = document.getElementById('reg-dob');
                     if (dobInput) {
-                        if (u.dob) dobInput.value = new Date(u.dob).toISOString().split('T')[0];
-                        else dobInput.value = "";
+                        if (u.dob) {
+                            // FIXED: Gunakan waktu lokal agar tanggal tidak berkurang 1 hari
+                            const d = new Date(u.dob);
+                            const year = d.getFullYear();
+                            const month = String(d.getMonth() + 1).padStart(2, '0');
+                            const day = String(d.getDate()).padStart(2, '0');
+                            dobInput.value = `${year}-${month}-${day}`;
+                        } else {
+                            dobInput.value = "";
+                        }
                     }
                     document.getElementById('reg-rank').value = u.rank;
                     document.getElementById('reg-position').value = u.jabatan;
