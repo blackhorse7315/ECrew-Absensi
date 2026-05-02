@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>E Crew Attendant List - Advanced Duty Tracking</title>
+    <title>E Crew Attendant List - Transwisata Prima Aviation</title>
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -214,6 +214,22 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
+
+        /* Web Viewer Style */
+        #webview-container {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            background: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #external-frame {
+            flex-grow: 1;
+            border: none;
+            width: 100%;
+        }
     </style>
 </head>
 
@@ -252,7 +268,7 @@
                     LOG IN
                 </button>
             </div>
-            <p class="text-center text-[9px] text-slate-400 mt-8 font-medium italic">Powered by TWA System v2.0</p>
+            <p class="text-center text-[9px] text-slate-400 mt-8 font-medium italic">Powered by SkyOps Solution v2.0</p>
         </div>
     </div>
 
@@ -296,6 +312,7 @@
                 <button onclick="setAdminTab('users')" id="admin-tab-users" class="admin-tab active whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold bg-white text-slate-500">KARYAWAN</button>
                 <button onclick="setAdminTab('all-logs')" id="admin-tab-all-logs" class="admin-tab whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold bg-white text-slate-500">RIWAYAT SEMUA</button>
                 <button onclick="setAdminTab('news')" id="admin-tab-news" class="admin-tab whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold bg-white text-slate-500">BERITA & INFO</button>
+                <button onclick="setAdminTab('links')" id="admin-tab-links" class="admin-tab whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold bg-white text-slate-500">LINK PERSONAL</button>
                 <button onclick="setAdminTab('worklists')" id="admin-tab-worklists" class="admin-tab whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold bg-white text-slate-500">LIST TUGAS</button>
                 <button onclick="setAdminTab('config')" id="admin-tab-config" class="admin-tab whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold bg-white text-slate-500">ATURAN WAKTU</button>
             </div>
@@ -382,6 +399,31 @@
                     </div>
                 </div>
                 <div id="admin-news-list" class="space-y-3 pb-10"></div>
+            </div>
+
+            <!-- Admin Section: Personal Links -->
+            <div id="admin-section-links" class="hidden-element space-y-6">
+                <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm space-y-4">
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Atur Link Personal</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Pilih Karyawan</label>
+                            <select id="link-user-select" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border border-slate-100">
+                                <option value="">-- Pilih User --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Nama Menu</label>
+                            <input type="text" id="link-menu-name" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border border-slate-100" placeholder="Contoh: Personal Data">
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">URL / Link CV</label>
+                            <textarea id="link-url-input" rows="3" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-medium border border-slate-100" placeholder="Tempel link https://... disini"></textarea>
+                        </div>
+                        <button onclick="savePersonalLink()" class="w-full py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black shadow-lg">SIMPAN LINK KE USER</button>
+                    </div>
+                </div>
+                <div id="admin-link-list" class="space-y-3 pb-10"></div>
             </div>
 
             <!-- Admin Section: Worklists -->
@@ -492,7 +534,7 @@
             <div id="user-info-section" class="space-y-6 mb-8">
                 <div>
                     <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-3 ml-1">Berita Terkini</h3>
-                    <div id="user-news-slider" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar news-container"></div>
+                    <div id="user-news-slider" class="flex gap-4 overflow-x-auto pb-4 news-container no-scrollbar"></div>
                 </div>
                 <div class="bg-blue-600 rounded-[2rem] p-6 text-white shadow-xl shadow-blue-100">
                     <div class="flex items-center gap-3 mb-4">
@@ -516,6 +558,18 @@
                         <i class="fas fa-sign-out-alt text-2xl"></i>
                     </div>
                     <span class="font-bold text-slate-700">Check Out</span>
+                </button>
+                <button id="btn-open-leaves" onclick="openWebView('https://blackhorse7315.github.io/ECrew-Leaves/', 'MENU CUTI')" class="flex flex-col items-center justify-center bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-all active:scale-95 group">
+                    <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                        <i class="fas fa-calendar-check text-2xl"></i>
+                    </div>
+                    <span class="font-bold text-slate-700">Cuti</span>
+                </button>
+                <button id="btn-open-personal" onclick="handlePersonalDataClick()" class="hidden-element flex flex-col items-center justify-center bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-all active:scale-95 group">
+                    <div class="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-purple-600 group-hover:text-white transition-all">
+                        <i class="fas fa-id-card text-2xl"></i>
+                    </div>
+                    <span id="label-personal-data" class="font-bold text-slate-700 text-center text-xs">Personal Data</span>
                 </button>
             </div>
 
@@ -650,7 +704,24 @@
         </main>
     </div>
 
-    <!-- Modals -->
+    <!-- Modals & Containers -->
+
+    <!-- Web Viewer Container -->
+    <div id="webview-container" class="hidden-element animate-fade">
+        <nav class="bg-white shadow-md px-4 py-3 flex items-center justify-between z-[2100]">
+            <div class="flex items-center gap-3">
+                <button onclick="closeWebView()" class="w-10 h-10 flex items-center justify-center bg-slate-100 text-slate-600 rounded-xl active:scale-90 transition-transform">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Internal Portal</p>
+                    <p id="webview-title" class="text-xs font-bold text-blue-600">LOADING...</p>
+                </div>
+            </div>
+            <button onclick="closeWebView()" class="text-[10px] font-black text-white bg-slate-900 px-4 py-2 rounded-lg shadow-lg">KEMBALI KE DASHBOARD</button>
+        </nav>
+        <iframe id="external-frame" src="about:blank"></iframe>
+    </div>
 
     <!-- News Detail Modal -->
     <div id="news-detail-modal" class="fixed inset-0 z-[900] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/80 backdrop-blur-sm hidden-element">
@@ -924,13 +995,13 @@
         <div class="bg-white w-full max-w-xs rounded-[2.5rem] p-10 text-center animate-fade shadow-2xl">
             <div class="w-24 h-24 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8"><i class="fas fa-check-double text-4xl"></i></div>
             <h4 class="text-xl font-bold mb-3 text-slate-800">Berhasil!</h4>
-            <p id="success-msg" class="text-slate-400 text-sm mb-8 leading-relaxed">Operasi berhasil disinkronkan.</p>
+            <p id="success-msg" class="text-slate-400 text-sm mb-8 leading-relaxed">Anda telah mengirimkan ucapan Selamat Ulang Tahun 🎁🎊🥳🎂.</p>
             <button onclick="closeSuccessModal()" class="w-full py-4 gradient-bg text-white rounded-2xl font-bold">Mengerti</button>
         </div>
     </div>
 
     <script>
-        const webAppUrl = "https://script.google.com/macros/s/AKfycbzcMxcJA_hmS5Mw9mLva6g98uhXUeuPskVIN5sme22-6ixEE0E6iGMa0YKqTSu0IVqBXg/exec";
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbxhkTs9K7pCrpgHD_KoX7kbVNna8W6d-8W39JDEw4T5yu_yZXD8l70ixpOl3ZIG2ghb2A/exec";
 
         // APP STATE
         let users = [];
@@ -1263,6 +1334,7 @@
             document.getElementById('admin-view').classList.add('hidden-element');
             document.getElementById('user-attendance-view').classList.add('hidden-element');
             document.getElementById('btn-my-profile').classList.add('hidden-element');
+            document.getElementById('webview-container').classList.add('hidden-element');
 
             if (view === 'login') {
                 document.getElementById('login-page').classList.remove('hidden-element');
@@ -1341,12 +1413,14 @@
         // ADMIN FUNCTIONS
         window.setAdminTab = function(tab) {
             adminTab = tab;
-            ['users', 'all-logs', 'news', 'worklists', 'config'].forEach(t => {
+            // Update daftar tab untuk menyertakan 'links'
+            ['users', 'all-logs', 'news', 'links', 'worklists', 'config'].forEach(t => {
                 const btn = document.getElementById("admin-tab-" + t),
                     sec = document.getElementById("admin-section-" + t);
                 if (btn) btn.classList.toggle('active', t === tab);
                 if (sec) sec.classList.toggle('hidden-element', t !== tab);
             });
+            
             if (tab === 'users') renderUserList();
             if (tab === 'all-logs') {
                 updateAdminUserDatalist();
@@ -1355,6 +1429,10 @@
             if (tab === 'news') {
                 resetNewsForm();
                 renderNewsAdmin();
+            }
+            if (tab === 'links') {
+                renderAdminLinkOptions();
+                renderAdminLinkList();
             }
             if (tab === 'worklists') renderAdminWorkLists();
             if (tab === 'config') renderScheduleConfig();
@@ -1951,6 +2029,27 @@
             if (watchId) navigator.geolocation.clearWatch(watchId);
         };
 
+        // WEB VIEWER HANDLERS
+        window.openWebView = function(url, title) {
+            const container = document.getElementById('webview-container');
+            const frame = document.getElementById('external-frame');
+            const titleEl = document.getElementById('webview-title');
+            
+            document.getElementById('app-content').classList.add('hidden-element');
+            titleEl.textContent = title;
+            frame.src = url;
+            container.classList.remove('hidden-element');
+        };
+
+        window.closeWebView = function() {
+            const container = document.getElementById('webview-container');
+            const frame = document.getElementById('external-frame');
+            
+            container.classList.add('hidden-element');
+            frame.src = 'about:blank';
+            document.getElementById('app-content').classList.remove('hidden-element');
+        };
+
         function showFormError(msg) {
             const container = document.getElementById('form-error-msg'),
                 errorText = document.getElementById('error-text');
@@ -2026,7 +2125,7 @@
                     },
                     checkOut: null
                 };
-                document.getElementById('success-msg').textContent = "Anda Berhasil Melakukan Check in - selamat bekerja";
+                document.getElementById('success-msg').textContent = "Anda Berhasil Melakukan Check in - Selamat Bekerja😀";
             } else {
                 const remarksValue = document.getElementById('remarks').value.trim();
                 if (!remarksValue) {
@@ -2077,7 +2176,7 @@
                     };
                     currentSession = active;
                 }
-                document.getElementById('success-msg').textContent = "anda berhasil Check Out Selamat istirahat & hati-hati di jalan";
+                document.getElementById('success-msg').textContent = "Anda Berhasil Check Out Selamat Istirahat & Hati-hati di Jalan😊👋🏼";
             }
             await callCloud("saveLog", currentSession);
             updateUI();
@@ -2186,36 +2285,43 @@
             }
             if (userHistory.length === 0) {
                 if (list) list.innerHTML = '<div class="text-center py-16 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100"><p class="text-slate-300 text-sm font-medium">Belum ada aktivitas</p></div>';
-                return;
+            } else {
+                userHistory.sort((a, b) => b.checkIn.timestamp - a.checkIn.timestamp);
+                let grouped = {};
+                userHistory.forEach(s => {
+                    const date = new Date(s.checkIn.timestamp);
+                    let key = "";
+                    if (historyFilter === 'daily') {
+                        if (date.toDateString() === new Date().toDateString()) key = "Hari Ini";
+                        else return;
+                    } else if (historyFilter === 'weekly') key = "Minggu Ke-" + getWeekNumber(date) + " (" + date.getFullYear() + ")";
+                    else if (historyFilter === 'monthly') key = date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+                    else if (historyFilter === 'yearly') key = "Tahun " + date.getFullYear();
+                    if (!grouped[key]) grouped[key] = [];
+                    grouped[key].push(s);
+                });
+                Object.keys(grouped).forEach(key => {
+                    if (list) list.insertAdjacentHTML('beforeend', '<div class="flex items-center gap-3 py-2 px-2"><span class="h-px bg-slate-100 flex-grow"></span><span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">' + key + '</span><span class="h-px bg-slate-100 flex-grow"></span></div>');
+                    grouped[key].forEach(s => {
+                        const isC = s.checkOut !== null, dateObj = new Date(s.checkIn.timestamp), df = String(dateObj.getDate()).padStart(2, '0') + String(dateObj.getMonth() + 1).padStart(2, '0') + dateObj.getFullYear();
+                        if (list) list.insertAdjacentHTML('beforeend', '<div onclick="showDetail(\'' + s.id + '\')" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-50 flex items-center justify-between active:scale-[0.98] transition-all cursor-pointer animate-fade"><div class="flex items-center gap-5"><div class="relative"><img src="' + s.checkIn.photo + '" class="w-16 h-16 rounded-2xl object-cover border-4 border-white shadow-lg">' + (isC ? '<div class="absolute -bottom-1 -right-1 w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center text-white border-2 border-white shadow-md"><i class="fas fa-check text-[10px]"></i></div>' : '') + '</div><div><h4 class="text-sm font-black text-slate-800">' + s.userName + '</h4><p class="text-[10px] font-black text-slate-400 mt-0.5">' + s.userPosition + " - " + s.userDivision + " [" + df + "]" + '</p><div class="flex items-center gap-3 mt-2"><span class="text-[10px] text-blue-600 font-bold">' + s.checkIn.time + '</span><i class="fas fa-long-arrow-alt-right text-slate-200"></i><span class="text-[10px] ' + (isC ? 'text-slate-700 font-bold' : 'text-blue-500 font-black animate-pulse') + '">' + (isC ? s.checkOut.time : 'AKTIF') + '</span></div></div></div><div class="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-300"><i class="fas fa-chevron-right text-xs"></i></div></div>');
+                    });
+                });
             }
-            userHistory.sort((a, b) => b.checkIn.timestamp - a.checkIn.timestamp);
-            let grouped = {};
-            userHistory.forEach(s => {
-                const date = new Date(s.checkIn.timestamp);
-                let key = "";
-                if (historyFilter === 'daily') {
-                    if (date.toDateString() === new Date().toDateString()) key = "Hari Ini";
-                    else return;
-                } else if (historyFilter === 'weekly') key = "Minggu Ke-" + getWeekNumber(date) + " (" + date.getFullYear() + ")";
-                else if (historyFilter === 'monthly') key = date.toLocaleDateString('id-ID', {
-                    month: 'long',
-                    year: 'numeric'
-                });
-                else if (historyFilter === 'yearly') key = "Tahun " + date.getFullYear();
-                if (!grouped[key]) grouped[key] = [];
-                grouped[key].push(s);
-            });
-            Object.keys(grouped).forEach(key => {
-                if (list) list.insertAdjacentHTML('beforeend', '<div class="flex items-center gap-3 py-2 px-2"><span class="h-px bg-slate-100 flex-grow"></span><span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">' + key + '</span><span class="h-px bg-slate-100 flex-grow"></span></div>');
-                grouped[key].forEach(s => {
-                    const isC = s.checkOut !== null,
-                        dateObj = new Date(s.checkIn.timestamp),
-                        df = String(dateObj.getDate()).padStart(2, '0') + String(dateObj.getMonth() + 1).padStart(2, '0') + dateObj.getFullYear();
-                    if (list) list.insertAdjacentHTML('beforeend', '<div onclick="showDetail(\'' + s.id + '\')" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-50 flex items-center justify-between active:scale-[0.98] transition-all cursor-pointer animate-fade"><div class="flex items-center gap-5"><div class="relative"><img src="' + s.checkIn.photo + '" class="w-16 h-16 rounded-2xl object-cover border-4 border-white shadow-lg">' + (isC ? '<div class="absolute -bottom-1 -right-1 w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center text-white border-2 border-white shadow-md"><i class="fas fa-check text-[10px]"></i></div>' : '') + '</div><div><h4 class="text-sm font-black text-slate-800">' + s.userName + '</h4><p class="text-[10px] font-black text-slate-400 mt-0.5">' + s.userPosition + " - " + s.userDivision + " [" + df + "]" + '</p><div class="flex items-center gap-3 mt-2"><span class="text-[10px] text-blue-600 font-bold">' + s.checkIn.time + '</span><i class="fas fa-long-arrow-alt-right text-slate-200"></i><span class="text-[10px] ' + (isC ? 'text-slate-700 font-bold' : 'text-blue-500 font-black animate-pulse') + '">' + (isC ? s.checkOut.time : 'AKTIF') + '</span></div></div></div><div class="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-300"><i class="fas fa-chevron-right text-xs"></i></div></div>');
-                });
-            });
-        }
 
+            // --- LOGIKA PERSONAL DATA (PENTING) ---
+            const btnPersonal = document.getElementById('btn-open-personal');
+            const labelPersonal = document.getElementById('label-personal-data');
+            const updatedUser = users.find(u => u.id == (currentUser ? currentUser.id : null));
+            if (updatedUser && updatedUser.cvLink) {
+                btnPersonal.classList.remove('hidden-element');
+                labelPersonal.textContent = updatedUser.cvMenuName || "Personal Data";
+                currentUser.cvLink = updatedUser.cvLink;
+                currentUser.cvMenuName = updatedUser.cvMenuName;
+            } else {
+                btnPersonal.classList.add('hidden-element');
+            }
+        }
         window.openMyProfile = function() {
             if (!currentUser || currentUser.role === 'admin') return;
             const modal = document.getElementById('my-profile-modal'),
@@ -2511,6 +2617,91 @@
                 printWin.print()
             }, 500);
         };
+
+        // PERSONAL LINK FUNCTIONS
+        function renderAdminLinkOptions() {
+            const select = document.getElementById('link-user-select');
+            if (select) {
+                select.innerHTML = '<option value="">-- Pilih User --</option>' + 
+                    users.map(u => `<option value="${u.id}">${u.name} (${u.rank || ''})</option>`).join('');
+            }
+        }
+
+        async function savePersonalLink() {
+            const userId = document.getElementById('link-user-select').value;
+            const menuName = document.getElementById('link-menu-name').value || "Personal Data";
+            const url = document.getElementById('link-url-input').value;
+
+            if (!userId || !url) {
+                alert("Pilih user dan masukkan link URL!");
+                return;
+            }
+
+            const userIndex = users.findIndex(u => u.id == userId);
+            if (userIndex !== -1) {
+                // Tambahkan data ke array lokal
+                users[userIndex].cvLink = url;
+                users[userIndex].cvMenuName = menuName;
+                
+                // Kirim ke Google Sheet
+                const res = await callCloud("saveUser", users[userIndex]);
+                
+                if (res.status === "success") {
+                    document.getElementById('link-url-input').value = "";
+                    document.getElementById('success-msg').textContent = "Link berhasil disimpan ke server.";
+                    document.getElementById('success-modal').classList.remove('hidden-element');
+                    renderAdminLinkList();
+                } else {
+                    alert("Gagal menyimpan ke server. Cek koneksi.");
+                }
+            }
+        }
+
+        function renderAdminLinkList() {
+            const container = document.getElementById('admin-link-list');
+            if (!container) return;
+            
+            const usersWithLinks = users.filter(u => u.cvLink);
+            container.innerHTML = "";
+
+            if (usersWithLinks.length === 0) {
+                container.innerHTML = '<div class="text-center py-10 bg-white rounded-3xl border-2 border-dashed border-slate-100 text-slate-300 text-[10px] font-bold uppercase">Belum ada link yang diatur</div>';
+                return;
+            }
+
+            usersWithLinks.forEach(u => {
+                container.insertAdjacentHTML('beforeend', `
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-50 flex items-center justify-between">
+                        <div class="flex-grow">
+                            <h4 class="text-xs font-black text-slate-800">${u.name}</h4>
+                            <p class="text-[9px] font-bold text-blue-600 uppercase">${u.cvMenuName || 'Personal Data'}</p>
+                            <p class="text-[8px] text-slate-400 truncate max-w-[200px]">${u.cvLink}</p>
+                        </div>
+                        <button onclick="removePersonalLink('${u.id}')" class="w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 rounded-lg">
+                            <i class="fas fa-trash text-[10px]"></i>
+                        </button>
+                    </div>
+                `);
+            });
+        }
+
+        async function removePersonalLink(id) {
+            if (confirm("Hapus link personal untuk user ini?")) {
+                const userIndex = users.findIndex(u => u.id == id);
+                if (userIndex !== -1) {
+                    delete users[userIndex].cvLink;
+                    delete users[userIndex].cvMenuName;
+                    await callCloud("saveUser", users[userIndex]);
+                    renderAdminLinkList();
+                }
+            }
+        }
+
+        function handlePersonalDataClick() {
+            if (currentUser && currentUser.cvLink) {
+                openWebView(currentUser.cvLink, currentUser.cvMenuName || 'PERSONAL DATA');
+            }
+        }
 
         // INITIALIZATION
         function initPWA() {
