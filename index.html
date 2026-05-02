@@ -912,11 +912,11 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="text-[9px] font-bold text-slate-400 uppercase mb-1">Tipe Kerja</label>
-                        <input type="text" id="edit-log-work-type" class="w-full p-3 bg-slate-50 rounded-xl outline-none text-xs font-bold border border-slate-100">
+                        <select id="edit-log-work-type" class="w-full p-3 bg-slate-50 rounded-xl outline-none text-xs font-bold border border-slate-100 appearance-none"></select>
                     </div>
                     <div>
                         <label class="text-[9px] font-bold text-slate-400 uppercase mb-1">Peran Tugas</label>
-                        <input type="text" id="edit-log-duty-as" class="w-full p-3 bg-slate-50 rounded-xl outline-none text-xs font-bold border border-slate-100">
+                        <select id="edit-log-duty-as" class="w-full p-3 bg-slate-50 rounded-xl outline-none text-xs font-bold border border-slate-100 appearance-none"></select>
                     </div>
                 </div>
                 <div>
@@ -924,8 +924,8 @@
                     <div class="space-y-3 mt-1 p-3 border border-blue-50 bg-blue-50/20 rounded-2xl">
                         <div class="grid grid-cols-3 gap-2">
                             <div class="col-span-1">
-                                <label class="text-[8px] font-bold text-slate-400">Jam</label>
-                                <input type="text" id="edit-log-in-time" class="w-full p-2 bg-white rounded-lg text-[10px] border border-slate-100">
+                                <label class="text-[8px] font-bold text-slate-400">Jam (Tanggal & Waktu)</label>
+                                <input type="datetime-local" step="1" id="edit-log-in-time" class="w-full p-2 bg-white rounded-lg text-[10px] border border-slate-100">
                             </div>
                             <div class="col-span-1">
                                 <label class="text-[8px] font-bold text-slate-400">Lat</label>
@@ -951,8 +951,8 @@
                     <div class="space-y-3 mt-1 p-3 border border-orange-50 bg-orange-50/20 rounded-2xl">
                         <div class="grid grid-cols-3 gap-2">
                             <div class="col-span-1">
-                                <label class="text-[8px] font-bold text-slate-400">Jam</label>
-                                <input type="text" id="edit-log-out-time" class="w-full p-2 bg-white rounded-lg text-[10px] border border-slate-100">
+                                <label class="text-[8px] font-bold text-slate-400">Jam (Tanggal & Waktu)</label>
+                                <input type="datetime-local" step="1" id="edit-log-out-time" class="w-full p-2 bg-white rounded-lg text-[10px] border border-slate-100">
                             </div>
                             <div class="col-span-1">
                                 <label class="text-[8px] font-bold text-slate-400">Lat</label>
@@ -1002,7 +1002,7 @@
     </div>
 
     <script>
-        const webAppUrl = "https://script.google.com/macros/s/AKfycbzTIx7GqKN3w6YgyZxUoV_CvmBgKd7tLLrf-Cu1EpQatc81TSVZripc71_cPzRMw2iVHw/exec";
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbw-ioAn9rrcPBbzvvChnFLY3h9zsp_4aQtXrxnIkXqr1wV4VjlN2CrcjqmAryOE6LapEw/exec";
 
         // APP STATE
         let users = [];
@@ -2529,9 +2529,25 @@
             const s = dutyHistory.find(x => x.id == id);
             if (!s) return;
             document.getElementById('edit-log-id').value = id;
-            document.getElementById('edit-log-work-type').value = s.workType || "";
-            document.getElementById('edit-log-duty-as').value = s.dutyAs || "";
-            document.getElementById('edit-log-in-time').value = s.checkIn.time;
+            
+            // Render Select Options
+            const workTypeEl = document.getElementById('edit-log-work-type');
+            const dutyAsEl = document.getElementById('edit-log-duty-as');
+            workTypeEl.innerHTML = availableWorkTypes.map(t => `<option value="${t}">${t}</option>`).join('');
+            dutyAsEl.innerHTML = availableDutyAs.map(r => `<option value="${r}">${r}</option>`).join('');
+            
+            workTypeEl.value = s.workType || "";
+            dutyAsEl.value = s.dutyAs || "";
+            
+            // Format Datetime untuk input type="datetime-local" (YYYY-MM-DDThh:mm:ss)
+            const formatForDatetimeLocal = (timestamp) => {
+                if (!timestamp) return "";
+                const d = new Date(timestamp);
+                const tzOffset = d.getTimezoneOffset() * 60000;
+                return new Date(d.getTime() - tzOffset).toISOString().slice(0, 19);
+            };
+
+            document.getElementById('edit-log-in-time').value = formatForDatetimeLocal(s.checkIn.timestamp);
             document.getElementById('edit-log-in-lat').value = s.checkIn.lat;
             document.getElementById('edit-log-in-lng').value = s.checkIn.lng;
             document.getElementById('edit-log-status-in').value = s.statusIn || "";
@@ -2540,7 +2556,7 @@
             const coSec = document.getElementById('edit-log-checkout-section');
             if (s.checkOut) {
                 coSec.classList.remove('hidden-element');
-                document.getElementById('edit-log-out-time').value = s.checkOut.time;
+                document.getElementById('edit-log-out-time').value = formatForDatetimeLocal(s.checkOut.timestamp);
                 document.getElementById('edit-log-out-lat').value = s.checkOut.lat || "";
                 document.getElementById('edit-log-out-lng').value = s.checkOut.lng || "";
                 document.getElementById('edit-log-status-out').value = s.checkOut.statusOut || "";
@@ -2561,7 +2577,15 @@
             if (!s) return;
             s.workType = document.getElementById('edit-log-work-type').value;
             s.dutyAs = document.getElementById('edit-log-duty-as').value;
-            s.checkIn.time = document.getElementById('edit-log-in-time').value;
+            
+            // Konversi kembali dari string datetime ke timestamp dan display string time
+            const inTimeVal = document.getElementById('edit-log-in-time').value;
+            if (inTimeVal) {
+                const inDate = new Date(inTimeVal);
+                s.checkIn.timestamp = inDate.getTime();
+                s.checkIn.time = inDate.toLocaleTimeString('id-ID', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            }
+
             s.checkIn.lat = parseFloat(document.getElementById('edit-log-in-lat').value);
             s.checkIn.lng = parseFloat(document.getElementById('edit-log-in-lng').value);
             s.statusIn = document.getElementById('edit-log-status-in').value;
@@ -2569,18 +2593,21 @@
             s.lateReason = inR[0] ? inR[0].trim() : "";
             s.outsideOfficeReason = inR[1] ? inR[1].trim() : "";
             if (s.checkOut) {
-                s.checkOut.time = document.getElementById('edit-log-out-time').value;
+                const outTimeVal = document.getElementById('edit-log-out-time').value;
+                if (outTimeVal) {
+                    const outDate = new Date(outTimeVal);
+                    s.checkOut.timestamp = outDate.getTime();
+                    s.checkOut.time = outDate.toLocaleTimeString('id-ID', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                }
+
                 s.checkOut.lat = parseFloat(document.getElementById('edit-log-out-lat').value);
                 s.checkOut.lng = parseFloat(document.getElementById('edit-log-out-lng').value);
                 s.checkOut.statusOut = document.getElementById('edit-log-status-out').value;
                 const outR = document.getElementById('edit-log-remarks').value.split('|');
                 s.checkOut.statusReason = outR[1] ? outR[0].trim() : "";
                 s.checkOut.remarks = outR[1] ? outR[1].trim() : outR[0].trim();
-                const [h, m] = s.checkOut.time.split(':').map(Number),
-                    cd = new Date(s.checkIn.timestamp);
-                cd.setHours(h, m, 0, 0);
-                s.checkOut.timestamp = cd.getTime();
-                s.checkOut.overtimeLabel = calculateOvertimeDuration(s.checkOut.timestamp)
+                
+                s.checkOut.overtimeLabel = calculateOvertimeDuration(s.checkOut.timestamp);
             }
             await callCloud("saveLog", s);
             closeLogEdit();
