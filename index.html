@@ -1206,17 +1206,24 @@
                     const dist2 = getDistance(currentPos.lat, currentPos.lng, officePoints[1].lat, officePoints[1].lng);
                     const isInsideP1 = dist1 <= officePoints[0].radius;
                     const isInsideP2 = dist2 <= officePoints[1].radius;
+                    const isSunday = new Date().getDay() === 0;
 
                     const badge = document.getElementById('office-status-badge');
                     const icon = document.getElementById('office-status-icon');
                     const text = document.getElementById('form-location-text');
                     const reasonCont = document.getElementById('outside-office-reason-container');
 
-                    if (isInsideP1 || isInsideP2) {
+                    if (isInsideP1 || isInsideP2 || isSunday) {
                         isOutsideOffice = false;
                         if (badge) badge.className = "mt-3 flex items-center gap-2 text-[10px] font-bold p-2.5 rounded-xl border bg-emerald-50 text-emerald-600 border-emerald-100";
                         if (icon) icon.className = "fas fa-check-circle";
-                        if (text) text.textContent = "Anda berada di dalam radius kantor";
+                        if (text) {
+                            if (isSunday && !(isInsideP1 || isInsideP2)) {
+                                text.textContent = "Hari Libur (Bebas Radius Lokasi)";
+                            } else {
+                                text.textContent = "Anda berada di dalam radius kantor";
+                            }
+                        }
                         if (reasonCont) reasonCont.classList.add('hidden-element');
                     } else {
                         isOutsideOffice = true;
@@ -2638,7 +2645,10 @@
                 }
                 return matchesName && matchesStart && matchesEnd;
             });
-            filtered.sort((a, b) => b.checkIn.timestamp - a.checkIn.timestamp);
+            
+            // PERUBAHAN: Diubah dari b - a menjadi a - b agar urut dari tanggal terkecil/awal
+            filtered.sort((a, b) => a.checkIn.timestamp - b.checkIn.timestamp);
+            
             if (filtered.length === 0) {
                 alert("Tidak ada data untuk dicetak");
                 return;
