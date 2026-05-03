@@ -1304,14 +1304,18 @@
                 pInput = document.getElementById('login-password').value,
                 errorBox = document.getElementById('login-error');
 
-            if (uInput === 'admin' && pInput === 'TWA119-021') {
+            // Membersihkan input dari spasi yang tidak disengaja di awal/akhir
+            const cleanUser = String(uInput).trim();
+            const cleanPass = String(pInput).trim();
+
+            if (cleanUser === 'admin' && cleanPass === 'TWA119-021') {
                 currentUser = {
                     id: 'admin-001',
                     role: 'admin',
                     name: 'Administrator'
                 };
                 showView('admin');
-            } else if (uInput === 'news' && pInput === 'news119-021') {
+            } else if (cleanUser === 'news' && cleanPass === 'news119-021') {
                 currentUser = {
                     id: 'news-admin-001',
                     role: 'news_admin',
@@ -1319,9 +1323,14 @@
                 };
                 showView('admin');
             } else {
-                // PERBAIKAN: Gunakan String() untuk memastikan tipe data sama persis, 
-                // sehingga jika password/username berupa angka di Google Sheet, login tetap berhasil.
-                const foundUser = users.find(u => String(u.username) === String(uInput) && String(u.password) === String(pInput));
+                // Membaca data dari Google Sheet sebagai teks murni (String)
+                // dan menghapus spasi gaib agar karakter spesial seperti @ terbaca persis
+                const foundUser = users.find(u => {
+                    const sheetUser = u.username ? String(u.username).trim() : "";
+                    const sheetPass = u.password ? String(u.password).trim() : "";
+                    return sheetUser === cleanUser && sheetPass === cleanPass;
+                });
+                
                 if (foundUser) {
                     currentUser = {
                         role: 'user',
@@ -1801,16 +1810,35 @@
 
         function renderUserList() {
             const container = document.getElementById('user-list-container');
+            const searchInput = document.getElementById('filter-user-name');
+            const searchQuery = searchInput ? searchInput.value.toLowerCase() : "";
+            
             if (container) container.innerHTML = "";
             if (users.length === 0) {
                 if (container) container.innerHTML = '<div class="text-center py-20 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100"><p class="text-slate-400 text-xs font-bold uppercase">Belum ada karyawan</p></div>';
                 return;
             }
+            
+            let filteredUsers = users;
+            if (searchQuery) {
+                filteredUsers = users.filter(u => 
+                    (u.name && u.name.toLowerCase().includes(searchQuery)) || 
+                    (u.username && String(u.username).toLowerCase().includes(searchQuery))
+                );
+            }
+            
+            if (filteredUsers.length === 0) {
+                if (container) container.innerHTML = '<div class="text-center py-20 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100"><p class="text-slate-400 text-xs font-bold uppercase">Pencarian tidak ditemukan</p></div>';
+                return;
+            }
+
             let groups = {};
-            users.forEach(u => {
-                if (!groups[u.divisi]) groups[u.divisi] = [];
-                groups[u.divisi].push(u);
+            filteredUsers.forEach(u => {
+                const div = u.divisi || "Tanpa Divisi";
+                if (!groups[div]) groups[div] = [];
+                groups[div].push(u);
             });
+            
             for (const div in groups) {
                 let html = '<div><div class="flex items-center gap-3 mb-4 px-2"><span class="h-px bg-slate-200 flex-grow"></span><span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">' + div + '</span><span class="h-px bg-slate-200 flex-grow"></span></div><div class="grid grid-cols-1 gap-3">';
                 groups[div].forEach(u => {
