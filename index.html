@@ -1100,7 +1100,8 @@
             if (!webAppUrl) return;
             if (!isBackground) showMiniSync("MEMPERBARUI...");
             try {
-                const response = await fetch(webAppUrl + "?action=syncData&t=" + Date.now());
+                // PERBAIKAN: Menambahkan { cache: "no-store" } untuk memaksa browser menarik data terbaru dari server
+                const response = await fetch(webAppUrl + "?action=syncData&t=" + Date.now(), { cache: "no-store" });
                 const data = await response.json();
                 if (data && data.users) {
                     users = data.users || [];
@@ -1123,9 +1124,9 @@
             hideMiniSync();
         }
 
-        setInterval(() => syncWithCloud(true), 300000);
+        // PERUBAHAN: Mengubah interval menjadi 180000 milidetik (3 Menit)
+        setInterval(() => syncWithCloud(true), 180000);
 
-        // UTILITIES
         function getDistance(lat1, lon1, lat2, lon2) {
             const R = 6371e3;
             const φ1 = lat1 * Math.PI / 180,
