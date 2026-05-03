@@ -1319,7 +1319,9 @@
                 };
                 showView('admin');
             } else {
-                const foundUser = users.find(u => u.username === uInput && u.password === pInput);
+                // PERBAIKAN: Gunakan String() untuk memastikan tipe data sama persis, 
+                // sehingga jika password/username berupa angka di Google Sheet, login tetap berhasil.
+                const foundUser = users.find(u => String(u.username) === String(uInput) && String(u.password) === String(pInput));
                 if (foundUser) {
                     currentUser = {
                         role: 'user',
@@ -2396,9 +2398,16 @@
             if (!newPass.trim()) return;
             const idx = users.findIndex(u => u.id == currentUser.id);
             if (idx !== -1) {
+                // Perbarui password di memori lokal
                 users[idx].password = newPass;
                 currentUser.password = newPass;
-                await callCloud("saveUser", currentUser);
+                
+                // Simpan langsung array user asli ke Cloud
+                await callCloud("saveUser", users[idx]);
+                
+                // Beri pesan sukses dan kosongkan kolom
+                document.getElementById('my-profile-password').value = "";
+                document.getElementById('success-msg').textContent = "Password berhasil diubah. Silakan gunakan password baru ini untuk login berikutnya.";
                 document.getElementById('success-modal').classList.remove('hidden-element');
                 closeMyProfile();
             }
