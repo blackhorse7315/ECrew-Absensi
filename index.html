@@ -525,8 +525,8 @@
                         <span id="current-date" class="text-slate-400 text-xs mt-1 font-medium">--</span>
                     </div>
                     <div class="text-right">
-                        <i class="fas fa-cloud-sun text-3xl text-orange-300 mb-1"></i>
-                        <p class="text-[10px] opacity-60">28°C Jakarta</p>
+                        <i id="weather-icon" class="fas fa-cloud-sun text-3xl text-slate-300 mb-1 animate-pulse"></i>
+                        <p id="weather-text" class="text-[10px] opacity-60">Mendeteksi cuaca...</p>
                     </div>
                 </div>
                 <div class="absolute -top-10 -right-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl"></div>
@@ -1438,11 +1438,56 @@
                     }
                     updateUI();
                     checkBirthdays();
+                    updateWeather();
                 }
             }
         }
 
         // LOGIC FUNCTIONS
+        async function updateWeather() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+
+                    try {
+                        // 1. Ambil Cuaca (Open-Meteo API - Gratis)
+                        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true`);
+                        const weatherData = await weatherRes.json();
+                        const temp = Math.round(weatherData.current_weather.temperature);
+                        const code = weatherData.current_weather.weathercode;
+
+                        // 2. Mapping Ikon Cuaca
+                        let icon = "fas fa-cloud-sun text-orange-300";
+                        if (code === 0) icon = "fas fa-sun text-yellow-400";
+                        else if (code >= 1 && code <= 3) icon = "fas fa-cloud-sun text-orange-300";
+                        else if (code >= 45 && code <= 48) icon = "fas fa-smog text-slate-400";
+                        else if (code >= 51 && code <= 67) icon = "fas fa-cloud-rain text-blue-400";
+                        else if (code >= 71 && code <= 77) icon = "fas fa-snowflake text-blue-200";
+                        else if (code >= 80 && code <= 82) icon = "fas fa-cloud-showers-heavy text-blue-500";
+                        else if (code >= 95 && code <= 99) icon = "fas fa-bolt text-yellow-500";
+
+                        // 3. Ambil Nama Kota (BigDataCloud API - Gratis)
+                        const geoRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=id`);
+                        const geoData = await geoRes.json();
+                        const city = geoData.city || geoData.locality || "Lokasi Anda";
+
+                        // 4. Update UI
+                        const iconEl = document.getElementById('weather-icon');
+                        const textEl = document.getElementById('weather-text');
+                        if (iconEl) iconEl.className = icon + " text-3xl mb-1";
+                        if (textEl) textEl.textContent = `${temp}°C ${city}`;
+
+                    } catch (error) {
+                        console.error("Gagal memuat cuaca:", error);
+                        document.getElementById('weather-text').textContent = "--°C Offline";
+                    }
+                }, () => {
+                    document.getElementById('weather-text').textContent = "GPS Nonaktif";
+                });
+            }
+        }
+
         function checkBirthdays() {
             const section = document.getElementById('birthday-section');
             if (!currentUser || currentUser.role === 'admin') {
