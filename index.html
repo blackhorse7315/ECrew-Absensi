@@ -1132,6 +1132,16 @@
 
         // UTILITIES
         
+        // FUNGSI NOTIFIKASI SUARA
+        function speakNotification(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'id-ID'; // Menggunakan suara bahasa Indonesia
+                utterance.rate = 1.0; // Kecepatan normal
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
         // PERCEPATAN 2: FUNGSI KOMPRESI GAMBAR OTOMATIS
         // Mengecilkan ukuran gambar dari MB menjadi KB sebelum dikirim ke server
         async function compressImage(dataUrl, maxWidth = 800, maxHeight = 800, quality = 0.6) {
@@ -2290,6 +2300,7 @@
                 };
                 dutyHistory.push(currentSession); // PERCEPATAN: Tambahkan langsung ke UI!
                 document.getElementById('success-msg').textContent = "Anda Berhasil Melakukan Check in - Selamat Bekerja😀";
+                speakNotification("Berhasil, anda telah check in. Selamat Bekerja");
             } else {
                 const remarksValue = document.getElementById('remarks').value.trim();
                 if (!remarksValue) {
@@ -2341,6 +2352,7 @@
                     currentSession = active;
                 }
                 document.getElementById('success-msg').textContent = "Anda Berhasil Check Out Selamat Istirahat & Hati-hati di Jalan😊👋🏼";
+                speakNotification("anda berhasil check out. Hati-hati di jalan ya.");
             }
             
             // PERCEPATAN: Tampilkan modal sukses INSTAN tanpa menunggu server
