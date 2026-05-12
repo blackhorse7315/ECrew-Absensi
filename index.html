@@ -2300,7 +2300,7 @@
                 };
                 dutyHistory.push(currentSession); // PERCEPATAN: Tambahkan langsung ke UI!
                 document.getElementById('success-msg').textContent = "Anda Berhasil Melakukan Check in - Selamat Bekerja😀";
-                speakNotification("Berhasil, anda telah check in. Selamat Bekerja");
+                speakNotification("Berhasil, anda telah check in.");
             } else {
                 const remarksValue = document.getElementById('remarks').value.trim();
                 if (!remarksValue) {
@@ -2352,7 +2352,7 @@
                     currentSession = active;
                 }
                 document.getElementById('success-msg').textContent = "Anda Berhasil Check Out Selamat Istirahat & Hati-hati di Jalan😊👋🏼";
-                speakNotification("anda berhasil check out. Hati-hati di jalan ya.");
+                speakNotification("Berhasil, anda check out. Hati-hati di jalan ya.");
             }
             
             // PERCEPATAN: Tampilkan modal sukses INSTAN tanpa menunggu server
@@ -2823,13 +2823,25 @@
 
             const now = new Date(),
                 printWin = window.open('', '_blank');
-            let html = '<html><head><title>Laporan Kehadiran E-Crew</title><style>body{font-family:sans-serif;padding:30px;color:#333}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #ccc;padding:8px;font-size:10px;vertical-align:top}th{background-color:#f8f9fa;text-align:center;font-size:10px}td{text-align:center}.header{text-align:center;border-bottom:2px solid #333;padding-bottom:10px;margin-bottom:30px}.header h1{font-size:14px;margin:10px 0}.header p{font-size:12px;margin:5px 0}.footer{margin-top:60px;float:right;text-align:center;width:250px;font-size:11px}.footer p{margin:5px 0}.remarks-cell{white-space:pre-wrap;word-wrap:break-word;max-width:250px;text-align:left}.logo-container{text-align:center;margin-bottom:10px}.logo-container img{height:70px;width:auto}.signature-img{height:80px;width:auto;margin:10px auto;display:block;}</style></head><body><div class="logo-container"><img src="https://lh3.googleusercontent.com/d/1WNcGjsZ9_Fp54xzOl01EYRqM6-wY5Zh7" alt="Logo"></div><div class="header"><h1>LAPORAN KEHADIRAN KARYAWAN</h1><p>Sistem E-Crew Attendant List</p><p>Periode: ' + formatLongIndo(startVal) + ' s/d ' + formatLongIndo(endVal) + '</p></div><table><thead><tr><th>No</th><th>Nama Karyawan</th><th>Divisi</th><th>Jabatan</th><th>Tanggal</th><th>Check In</th><th>Check Out</th><th>Total Waktu Tugas</th><th>Type of Work/Duty Function</th><th>Detail Pekerjaan</th></tr></thead><tbody>';
+            
+            // PERUBAHAN HEADER TABEL: Susunan Kolom Diubah
+            let html = '<html><head><title>Laporan Kehadiran E-Crew</title><style>body{font-family:sans-serif;padding:30px;color:#333}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #ccc;padding:8px;font-size:10px;vertical-align:top}th{background-color:#f8f9fa;text-align:center;font-size:10px}td{text-align:center}.header{text-align:center;border-bottom:2px solid #333;padding-bottom:10px;margin-bottom:30px}.header h1{font-size:14px;margin:10px 0}.header p{font-size:12px;margin:5px 0}.footer{margin-top:60px;float:right;text-align:center;width:250px;font-size:11px}.footer p{margin:5px 0}.remarks-cell{white-space:pre-wrap;word-wrap:break-word;max-width:250px;text-align:left}.logo-container{text-align:center;margin-bottom:10px}.logo-container img{height:70px;width:auto}.signature-img{height:80px;width:auto;margin:10px auto;display:block;}</style></head><body><div class="logo-container"><img src="https://lh3.googleusercontent.com/d/1WNcGjsZ9_Fp54xzOl01EYRqM6-wY5Zh7" alt="Logo"></div><div class="header"><h1>LAPORAN KEHADIRAN KARYAWAN</h1><p>Sistem E-Crew Attendant List</p><p>Periode: ' + formatLongIndo(startVal) + ' s/d ' + formatLongIndo(endVal) + '</p></div><table><thead><tr><th>No</th><th>Nama Karyawan</th><th>Divisi</th><th>Jabatan</th><th>Tanggal Check In</th><th>Check In</th><th>Tanggal Check Out</th><th>Check Out</th><th>Total Waktu Tugas</th><th>Type of Work/Duty Function</th><th>Detail Pekerjaan</th></tr></thead><tbody>';
 
             filtered.forEach((s, i) => {
-                const d = new Date(s.checkIn.timestamp),
-                    ds = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear(),
+                // FORMAT TANGGAL CHECK IN
+                const dIn = new Date(s.checkIn.timestamp),
+                    dsIn = String(dIn.getDate()).padStart(2, '0') + '/' + String(dIn.getMonth() + 1).padStart(2, '0') + '/' + dIn.getFullYear(),
                     dur = s.checkOut ? formatDuration(s.checkIn.timestamp, s.checkOut.timestamp) : '-';
-                html += '<tr><td>' + (i + 1) + '</td><td style="text-align:left">' + s.userName + '</td><td>' + (s.userDivision || '-') + '</td><td>' + (s.userPosition || '-') + '</td><td>' + ds + '</td><td>' + s.checkIn.time + '</td><td>' + (s.checkOut ? s.checkOut.time : '-') + '</td><td>' + dur + '</td><td>' + s.workType + ' / ' + s.dutyAs + '</td><td class="remarks-cell">' + (s.checkOut ? s.checkOut.remarks : '-') + '</td></tr>';
+                
+                // FORMAT TANGGAL CHECK OUT (Jika data Check Out belum ada, maka set strip "-")
+                let dsOut = '-';
+                if (s.checkOut && s.checkOut.timestamp) {
+                    const dOut = new Date(s.checkOut.timestamp);
+                    dsOut = String(dOut.getDate()).padStart(2, '0') + '/' + String(dOut.getMonth() + 1).padStart(2, '0') + '/' + dOut.getFullYear();
+                }
+
+                // MERAKIT BARIS TABEL (Susunan Kolom Diubah)
+                html += '<tr><td>' + (i + 1) + '</td><td style="text-align:left">' + s.userName + '</td><td>' + (s.userDivision || '-') + '</td><td>' + (s.userPosition || '-') + '</td><td>' + dsIn + '</td><td>' + s.checkIn.time + '</td><td>' + dsOut + '</td><td>' + (s.checkOut ? s.checkOut.time : '-') + '</td><td>' + dur + '</td><td>' + s.workType + ' / ' + s.dutyAs + '</td><td class="remarks-cell">' + (s.checkOut ? s.checkOut.remarks : '-') + '</td></tr>';
             });
             html += '</tbody></table><div class="footer"><p>Dicetak pada: ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear() + ', pukul ' + now.toLocaleTimeString('id-ID') + '</p><p>Penanggung Jawab,</p><img src="https://lh3.googleusercontent.com/d/1yhAmuOoGe6GT4UaJEixJi4cadHbUfXTL" class="signature-img"><p><u><b>Media Marbun</b></u></p><p>HRD Manager</p></div></body></html>';
             printWin.document.write(html);
