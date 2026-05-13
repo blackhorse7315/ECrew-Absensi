@@ -651,7 +651,7 @@
                         </div>
 
                         <div id="late-reason-container" class="hidden-element">
-                            <label class="text-[10px] font-bold text-red-500 uppercase mb-2 block tracking-widest">Alasan Terlambat (Wajib diisi)</label>
+                            <label class="text-[10px] font-bold text-red-500 uppercase mb-2 block tracking-widest">Alasan Terlambat, karena anda check in diatas pukul 09:01 (Wajib diisi)</label>
                             <textarea id="late-reason" rows="2" class="w-full p-4 bg-red-50 border border-red-200 rounded-2xl outline-none text-sm font-medium resize-none" placeholder="Kenapa terlambat?"></textarea>
                         </div>
 
@@ -2763,6 +2763,10 @@ window.openFullMap = function(id) {
                             <p class="text-[10px] font-bold text-red-600 mt-1">${s.lateReason || '-'}</p>
                         </div>` : ''}
 
+                    <!-- Keterangan Alasan Jika Ada -->
+                        ${s.statusIn === "Terlambat" ? `<div class="mt-3 p-3 bg-red-50 rounded-xl border border-red-100"><p class="text-[7px] font-black text-red-400 uppercase mb-1">Alasan Terlambat</p><p class="text-[10px] font-bold text-red-600">${s.lateReason || '-'}</p></div>` : ''}
+                        ${!s.checkIn.isWithinRadius && s.outsideOfficeReason ? `<div class="mt-2 p-3 bg-red-50 rounded-xl border border-red-100"><p class="text-[7px] font-black text-red-400 uppercase mb-1">Alasan Luar Area</p><p class="text-[10px] font-bold text-red-600">${s.outsideOfficeReason}</p></div>` : ''}
+                    </div>
                         ${!s.checkIn.isWithinRadius && s.outsideOfficeReason ? `
                         <div class="mt-4 p-3 bg-red-50 border border-red-100 rounded-2xl">
                             <p class="text-[7px] font-black text-red-400 uppercase tracking-widest">Alasan Luar Area</p>
@@ -2810,6 +2814,9 @@ window.openFullMap = function(id) {
                             <p class="text-[7px] font-black text-red-400 uppercase tracking-widest">Alasan Luar Area</p>
                             <p class="text-[10px] font-bold text-red-600 mt-1">${s.checkOut.statusReason}</p>
                         </div>` : ''}
+                    <!-- Keterangan Alasan Jika Ada -->
+                        ${(s.checkOut.statusOut === "Lembur" || s.checkOut.statusOut === "Pulang Sebelum Waktunya") ? `<div class="mt-3 p-3 bg-blue-50 rounded-xl border border-blue-100"><p class="text-[7px] font-black text-blue-400 uppercase mb-1">Alasan ${s.checkOut.statusOut}</p><p class="text-[10px] font-bold text-blue-600">${s.checkOut.statusReason || '-'}</p></div>` : ''}
+                        ${!s.checkOut.isWithinRadius && s.checkOut.outsideReason ? `<div class="mt-2 p-3 bg-red-50 rounded-xl border border-red-100"><p class="text-[7px] font-black text-red-400 uppercase mb-1">Alasan Luar Area (Out)</p><p class="text-[10px] font-bold text-red-600">${s.checkOut.outsideReason}</p></div>` : ''}
                     </div>` : `
                     <div class="p-8 border-2 border-dashed border-slate-100 rounded-[2.5rem] text-center">
                         <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Personnel Still On Duty</p>
