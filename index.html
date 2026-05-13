@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ECrew Attendant List - Transwisata Prima Aviation
+    <title>ECrew-Attendant List - Transwisata Prima Aviation
 </title>
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1005,7 +1005,7 @@
     </div>
 
     <script>
-        const webAppUrl = "https://script.google.com/macros/s/AKfycbw-ioAn9rrcPBbzvvChnFLY3h9zsp_4aQtXrxnIkXqr1wV4VjlN2CrcjqmAryOE6LapEw/exec";
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbwWheESOAzFg8MAjIk6ag5iiV1-lw5CKsyqMhKrg04Bz1CK6B7NiTzVvNNkRW-Zo7D6CQ/exec";
 
         // APP STATE
         let users = [];
@@ -1190,7 +1190,7 @@
                 hour: '2-digit',
                 minute: '2-digit',
                 second: '2-digit'
-            });
+            }).replace(/\./g, ':'); // Mengganti titik menjadi titik dua
             const clockEl = document.getElementById('current-time'),
                 dateEl = document.getElementById('current-date');
             if (clockEl) clockEl.textContent = timeStr;
@@ -1754,10 +1754,20 @@
             filtered.forEach(s => {
                 const isC = s.checkOut !== null,
                     dateObj = new Date(s.checkIn.timestamp),
-                    // PERBAIKAN: Format tanggal menjadi [12 Sept 2026]
                     df = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
                 
-                if (container) container.insertAdjacentHTML('beforeend', '<div onclick="showDetail(\'' + s.id + '\')" class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-50 flex items-center justify-between active:scale-[0.98] transition-all cursor-pointer animate-fade"><div class="flex items-center gap-4"><div class="relative"><img src="' + s.checkIn.photo + '" class="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-md">' + (isC ? '<div class="absolute -top-1 -right-1 w-6 h-6 bg-blue-500 rounded-lg flex items-center justify-center text-white border border-white"><i class="fas fa-check text-[8px]"></i></div>' : '') + '</div><div class="flex-grow"><h4 class="text-xs font-black text-slate-800">' + s.userName + '</h4><p class="text-[8px] font-bold text-slate-400 uppercase tracking-tight">' + (s.userDivision || "") + ' [' + df + ']' + '</p><div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-50"><div><p class="text-[7px] font-black text-slate-400 uppercase tracking-widest">Check In Time</p><p class="text-[9px] font-bold text-blue-600">' + s.checkIn.time + '</p></div><div><p class="text-[7px] font-black text-slate-400 uppercase tracking-widest">Check Out Time</p><p class="text-[9px] ' + (isC ? 'text-slate-700 font-bold' : 'text-blue-500 animate-pulse font-black') + '">' + (isC ? s.checkOut.time : 'AKTIF') + '</p></div></div></div></div><div class="w-8 h-8 bg-slate-50 rounded-full flex items-center justify-center text-slate-200"><i class="fas fa-chevron-right text-[10px]"></i></div></div>');
+                // PERBAIKAN: Proteksi format 1899 (Google Sheets Time Format)
+                const formatTime = (t) => {
+                    if (!t) return '';
+                    let str = String(t);
+                    if (str.includes('T')) str = str.split('T')[1].split('.')[0];
+                    return str.replace(/\./g, ':');
+                };
+
+                const checkInTime = formatTime(s.checkIn.time);
+                const checkOutTime = isC ? formatTime(s.checkOut.time) : 'AKTIF';
+
+                if (container) container.insertAdjacentHTML('beforeend', '<div onclick="showDetail(\'' + s.id + '\')" class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-50 flex items-center justify-between active:scale-[0.98] transition-all cursor-pointer animate-fade"><div class="flex items-center gap-4"><div class="relative"><img src="' + s.checkIn.photo + '" class="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-md">' + (isC ? '<div class="absolute -top-1 -right-1 w-6 h-6 bg-blue-500 rounded-lg flex items-center justify-center text-white border border-white"><i class="fas fa-check text-[8px]"></i></div>' : '') + '</div><div class="flex-grow"><h4 class="text-xs font-black text-slate-800">' + s.userName + '</h4><p class="text-[8px] font-bold text-slate-400 uppercase tracking-tight">' + (s.userDivision || "") + ' [' + df + ']' + '</p><div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-50"><div><p class="text-[7px] font-black text-slate-400 uppercase tracking-widest">Check In Time</p><p class="text-[9px] font-bold text-blue-600">' + checkInTime + '</p></div><div><p class="text-[7px] font-black text-slate-400 uppercase tracking-widest">Check Out Time</p><p class="text-[9px] ' + (isC ? 'text-slate-700 font-bold' : 'text-blue-500 animate-pulse font-black') + '">' + checkOutTime + '</p></div></div></div></div><div class="w-8 h-8 bg-slate-50 rounded-full flex items-center justify-center text-slate-200"><i class="fas fa-chevron-right text-[10px]"></i></div></div>');
             });
         };
 
@@ -2250,8 +2260,9 @@
                     return;
                 }
             }
-            const timeStr = document.getElementById('current-time').textContent,
-                now = Date.now(),
+            // Memastikan waktu yang diambil dari jam dashboard menggunakan format titik dua
+            const timeStr = document.getElementById('current-time').textContent.replace(/\./g, ':');
+            const now = Date.now(),
                 dateObj = new Date(),
                 day = dateObj.getDay(),
                 h = dateObj.getHours(),
@@ -2477,18 +2488,28 @@
                     if (!grouped[key]) grouped[key] = [];
                     grouped[key].push(s);
                 });
-                Object.keys(grouped).forEach(key => {
-                    if (list) list.insertAdjacentHTML('beforeend', '<div class="flex items-center gap-3 py-2 px-2"><span class="h-px bg-slate-100 flex-grow"></span><span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">' + key + '</span><span class="h-px bg-slate-100 flex-grow"></span></div>');
-                    grouped[key].forEach(s => {
-                        const isC = s.checkOut !== null, 
-                              dateObj = new Date(s.checkIn.timestamp),
-                              // PERBAIKAN: Format tanggal menjadi [12 Sept 2026]
-                              df = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+               Object.keys(grouped).forEach(key => {
+                if (list) list.insertAdjacentHTML('beforeend', '<div class="flex items-center gap-3 py-2 px-2"><span class="h-px bg-slate-100 flex-grow"></span><span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">' + key + '</span><span class="h-px bg-slate-100 flex-grow"></span></div>');
+                grouped[key].forEach(s => {
+                    const isC = s.checkOut !== null, 
+                          dateObj = new Date(s.checkIn.timestamp),
+                          df = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 
-                        if (list) list.insertAdjacentHTML('beforeend', '<div onclick="showDetail(\'' + s.id + '\')" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-50 flex items-center justify-between active:scale-[0.98] transition-all cursor-pointer animate-fade"><div class="flex items-center gap-5"><div class="relative"><img src="' + s.checkIn.photo + '" class="w-16 h-16 rounded-2xl object-cover border-4 border-white shadow-lg">' + (isC ? '<div class="absolute -bottom-1 -right-1 w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center text-white border-2 border-white shadow-md"><i class="fas fa-check text-[10px]"></i></div>' : '') + '</div><div class="flex-grow"><h4 class="text-sm font-black text-slate-800">' + s.userName + '</h4><p class="text-[10px] font-black text-slate-400 mt-0.5">' + s.userPosition + " - " + s.userDivision + " [" + df + "]" + '</p><div class="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-slate-50"><div><p class="text-[7px] font-black text-slate-400 uppercase tracking-widest">Check In Time</p><p class="text-[11px] font-bold text-blue-600">' + s.checkIn.time + '</p></div><div><p class="text-[7px] font-black text-slate-400 uppercase tracking-widest">Check Out Time</p><p class="text-[11px] ' + (isC ? 'text-slate-700 font-bold' : 'text-blue-500 font-black animate-pulse') + '">' + (isC ? s.checkOut.time : 'AKTIF') + '</p></div></div></div></div><div class="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-300"><i class="fas fa-chevron-right text-xs"></i></div></div>');
-                    });
+                    // PERBAIKAN: Proteksi format 1899 (Google Sheets Time Format)
+                    const formatTime = (t) => {
+                        if (!t) return '';
+                        let str = String(t);
+                        if (str.includes('T')) str = str.split('T')[1].split('.')[0];
+                        return str.replace(/\./g, ':');
+                    };
+
+                    const cInTime = formatTime(s.checkIn.time);
+                    const cOutTime = isC ? formatTime(s.checkOut.time) : 'AKTIF';
+
+                    if (list) list.insertAdjacentHTML('beforeend', '<div onclick="showDetail(\'' + s.id + '\')" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-50 flex items-center justify-between active:scale-[0.98] transition-all cursor-pointer animate-fade"><div class="flex items-center gap-5"><div class="relative"><img src="' + s.checkIn.photo + '" class="w-16 h-16 rounded-2xl object-cover border-4 border-white shadow-lg">' + (isC ? '<div class="absolute -bottom-1 -right-1 w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center text-white border-2 border-white shadow-md"><i class="fas fa-check text-[10px]"></i></div>' : '') + '</div><div class="flex-grow"><h4 class="text-sm font-black text-slate-800">' + s.userName + '</h4><p class="text-[10px] font-black text-slate-400 mt-0.5">' + s.userPosition + " - " + s.userDivision + " [" + df + "]" + '</p><div class="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-slate-50"><div><p class="text-[7px] font-black text-slate-400 uppercase tracking-widest">Check In Time</p><p class="text-[11px] font-bold text-blue-600">' + cInTime + '</p></div><div><p class="text-[7px] font-black text-slate-400 uppercase tracking-widest">Check Out Time</p><p class="text-[11px] ' + (isC ? 'text-slate-700 font-bold' : 'text-blue-500 font-black animate-pulse') + '">' + cOutTime + '</p></div></div></div></div><div class="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-300"><i class="fas fa-chevron-right text-xs"></i></div></div>');
                 });
-            }
+            });
+        }
 
             // --- LOGIKA PERSONAL DATA (PENTING) ---
             const btnPersonal = document.getElementById('btn-open-personal');
@@ -2597,41 +2618,250 @@
         window.showDetail = function(id) {
             const s = dutyHistory.find(x => x.id == id);
             if (!s) return;
-            document.getElementById('detail-id').textContent = "ID SESI: " + s.id;
-            const content = document.getElementById('detail-content'),
-                u = users.find(user => user.id == s.userId),
-                pPic = (u && u.profilePic) ? u.profilePic : (s.userProfilePic || ""),
-                detailAvatar = pPic ? '<img src="' + pPic + '" class="w-full h-full object-cover">' : '<i class="fas fa-user text-white/40 text-2xl"></i>';
 
-            content.innerHTML = (currentUser.role === 'admin' ? '<div class="flex gap-2 mb-6"><button onclick="editLog(\'' + s.id + '\')" class="flex-grow py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black shadow-lg">EDIT DATA</button><button onclick="deleteLog(\'' + s.id + '\')" class="px-4 py-3 bg-red-50 text-red-500 rounded-xl text-[10px] font-black border border-red-100">HAPUS</button></div>' : '') + '<div class="p-6 bg-slate-900 rounded-[2rem] text-white flex items-center gap-5 shadow-xl"><div class="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center overflow-hidden border border-white/20">' + detailAvatar + '</div><div><h4 class="text-lg font-black">' + s.userName + '</h4><p class="text-xs font-bold text-blue-400 uppercase tracking-widest">' + s.userPosition + ' - ' + s.userDivision + '</p></div></div><div class="grid grid-cols-2 gap-4"><div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 text-center"><p class="text-[8px] font-black text-blue-400 uppercase tracking-widest mb-1">Tipe</p><p class="text-xs font-bold text-slate-700">' + s.workType + '</p></div><div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center"><p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Peran</p><p class="text-xs font-bold text-slate-700">' + s.dutyAs + '</p></div></div><div class="space-y-3"><div class="p-4 rounded-2xl border flex items-center gap-4 ' + (s.statusIn === 'Terlambat' ? 'bg-red-50 border-red-100 text-red-700' : 'bg-emerald-50 border-emerald-100 text-emerald-700') + '"><i class="fas ' + (s.statusIn === 'Terlambat' ? 'fa-clock' : 'fa-check-circle') + ' text-lg"></i><div><p class="text-[8px] font-black uppercase tracking-widest opacity-60">Status Masuk</p><p class="text-xs font-bold">' + s.statusIn + '</p>' + (s.lateReason ? '<p class="text-[10px] mt-1 italic">"' + s.lateReason + '"</p>' : '') + (s.outsideOfficeReason ? '<p class="text-[10px] mt-1 font-bold text-orange-600 underline">Luar Radius: ' + s.outsideOfficeReason + '</p>' : '') + '</div></div>' + (s.checkOut ? '<div class="p-4 rounded-2xl border flex items-center gap-4 ' + (s.checkOut.statusOut === 'Lembur' ? 'bg-blue-50 border-blue-100 text-blue-700' : s.checkOut.statusOut === 'Pulang Sebelum Waktunya' ? 'bg-orange-50 border-orange-100 text-orange-700' : 'bg-emerald-50 border-emerald-100 text-emerald-700') + '"><i class="fas fa-door-open text-lg"></i><div><p class="text-[8px] font-black uppercase tracking-widest opacity-60">Status Keluar</p><p class="text-xs font-bold">' + s.checkOut.statusOut + '</p>' + (s.checkOut.statusReason ? '<p class="text-[10px] mt-1 italic">"' + s.checkOut.statusReason + '"</p>' : '') + '</div></div>' + (s.checkOut.overtimeLabel ? '<div class="p-4 rounded-2xl border border-blue-200 bg-blue-600 text-white flex items-center gap-4 shadow-lg shadow-blue-200"><i class="fas fa-bolt text-lg"></i><div><p class="text-[8px] font-black uppercase tracking-widest opacity-70 text-blue-100">Lama Lembur</p><p class="text-xs font-black">' + s.checkOut.overtimeLabel + '</p></div></div>' : '') + '<div class="p-4 rounded-2xl border border-emerald-100 bg-emerald-50/30 flex items-center gap-4 text-emerald-700"><i class="fas fa-stopwatch text-lg"></i><div><p class="text-[8px] font-black uppercase tracking-widest opacity-60">Total Waktu Tugas</p><p class="text-xs font-black">' + formatDuration(s.checkIn.timestamp, s.checkOut.timestamp) + '</p></div></div>' : '') + '</div><div class="space-y-6"><div class="bg-white rounded-3xl border border-slate-100 p-4 shadow-sm"><div class="flex items-center gap-4 mb-4"><img src="' + s.checkIn.photo + '" class="w-20 h-24 rounded-2xl object-cover shadow-md"><div><p class="text-xl font-black text-slate-800">' + s.checkIn.time + '</p><p class="text-[9px] text-slate-400 font-bold uppercase mt-1">In GPS</p></div></div><div id="map-in-' + s.id + '" class="detail-map" onclick="openExplorer(\'' + s.id + '\')"></div></div>' + (s.checkOut ? '<div class="bg-white rounded-3xl border border-slate-100 p-4 shadow-sm"><div class="flex items-center gap-4 mb-4"><img src="' + s.checkOut.photo + '" class="w-20 h-24 rounded-2xl object-cover shadow-md"><div><p class="text-xl font-black text-slate-800">' + s.checkOut.time + '</p><p class="text-[9px] text-slate-400 font-bold mt-1 uppercase">Out GPS</p></div></div><div class="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-100"><p class="text-[9px] font-black text-slate-400 uppercase mb-1">Remarks</p><p class="text-xs font-medium text-slate-700 whitespace-pre-wrap">' + (s.checkOut.remarks || '-') + '</p>' + (s.checkOut.workPhoto ? '<img src="' + s.checkOut.workPhoto + '" class="w-full h-32 object-cover rounded-xl mt-4 border border-slate-200">' : '') + '</div><div id="map-out-' + s.id + '" class="detail-map" onclick="openExplorer(\'' + s.id + '\')"></div></div>' : '') + '</div>';
+            // Ambil data user untuk foto profil
+            const userData = users.find(u => u.id == s.userId);
+            const profilePic = userData && userData.profilePic ? userData.profilePic : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
 
-            document.getElementById('detail-modal').classList.remove('hidden-element');
+            const cleanTime = (t) => {
+                if (!t) return "";
+                let str = String(t);
+                if (str.includes('T')) str = str.split('T')[1].split('.')[0];
+                return str.replace(/\./g, ':');
+            };
+
+            const checkInTime = cleanTime(s.checkIn.time);
+            const checkOutTime = s.checkOut ? cleanTime(s.checkOut.time) : "";
+            
+            const dateIn = new Date(s.checkIn.timestamp);
+            const dsIn = dateIn.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            const modal = document.getElementById('detail-modal'),
+                  content = document.getElementById('detail-content');
+            // ... cari blok window.openFullMap lama (sekitar baris 3221) dan ganti dengan ini ...
+window.openFullMap = function(id) {
+    // Cari data berdasarkan ID sesi
+    const s = dutyHistory.find(x => x.id == id);
+    if (!s) return;
+
+    const latIn = s.checkIn.lat;
+    const lngIn = s.checkIn.lng;
+    const hasOut = s.checkOut && s.checkOut.lat;
+    const latOut = hasOut ? s.checkOut.lat : null;
+    const lngOut = hasOut ? s.checkOut.lng : null;
+
+    // Kalkulasi Jarak Antara Titik In dan Out
+    let distanceText = "Awaiting Check Out";
+    if (hasOut) {
+        const R = 6371e3; // Radius bumi dalam meter
+        const dLat = (latOut - latIn) * Math.PI / 180;
+        const dLon = (lngOut - lngIn) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(latIn * Math.PI / 180) * Math.cos(latOut * Math.PI / 180) *
+                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distance = R * c;
+        distanceText = distance < 1000 ? Math.round(distance) + " Meter" : (distance / 1000).toFixed(2) + " KM";
+    }
+
+    const fullMapModal = document.createElement('div');
+    fullMapModal.id = 'full-map-overlay';
+    fullMapModal.className = 'fixed inset-0 z-[9999] bg-white animate-fade-in flex flex-col';
+    fullMapModal.innerHTML = `
+        <div class="p-6 flex items-center justify-between border-b border-slate-100 bg-white">
+            <div>
+                <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Movement Tracking</p>
+                <p class="text-xs font-bold text-slate-800">Distance: ${distanceText}</p>
+            </div>
+            <button onclick="document.getElementById('full-map-overlay').remove()" 
+                    class="w-10 h-10 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-lg active:scale-90 transition-all">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="full-map-container" class="flex-grow w-full"></div>
+        <div class="p-4 bg-white/80 backdrop-blur-md border-t border-slate-100 flex gap-2">
+             <button onclick="window.open('https://www.google.com/maps?q=${latIn},${lngIn}', '_blank')" 
+                    class="flex-grow py-3 bg-slate-100 text-slate-700 rounded-xl text-[9px] font-black uppercase">
+                Navigate to In
+            </button>
+            ${hasOut ? `<button onclick="window.open('https://www.google.com/maps?q=${latOut},${lngOut}', '_blank')" 
+                    class="flex-grow py-3 bg-slate-100 text-slate-700 rounded-xl text-[9px] font-black uppercase">
+                Navigate to Out
+            </button>` : ''}
+        </div>
+    `;
+    document.body.appendChild(fullMapModal);
+
+    setTimeout(() => {
+        const fMap = L.map('full-map-container', { zoomControl: false }).setView([latIn, lngIn], 16);
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(fMap);
+        
+        // Marker Check In
+        L.marker([latIn, lngIn]).addTo(fMap).bindPopup("Check In Point");
+
+        if (hasOut) {
+            // Marker Check Out
+            L.marker([latOut, lngOut]).addTo(fMap).bindPopup("Check Out Point");
+            
+            // Garis rute antara In dan Out
+            const polyline = L.polyline([[latIn, lngIn], [latOut, lngOut]], {
+                color: '#3b82f6',
+                weight: 4,
+                dashArray: '10, 10',
+                opacity: 0.7
+            }).addTo(fMap);
+
+            // Sesuaikan tampilan agar kedua titik terlihat
+            fMap.fitBounds(polyline.getBounds(), { padding: [50, 50] });
+        }
+    }, 100);
+};  
+            
+            content.innerHTML = `
+                ${currentUser.role === 'admin' ? `
+                <div class="flex gap-2 mb-6">
+                    <button onclick="editLog('${s.id}')" class="flex-grow py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black shadow-lg uppercase tracking-widest">Edit Data</button>
+                    <button onclick="deleteLog('${s.id}')" class="px-6 py-4 bg-red-50 text-red-500 rounded-2xl text-[10px] font-black border border-red-100 uppercase">Hapus</button>
+                </div>` : ''}
+
+                <div class="bg-slate-900 p-5 rounded-[2.5rem] mb-6 flex items-center gap-4 shadow-xl border border-slate-800">
+                    <img src="${profilePic}" class="w-14 h-14 rounded-2xl object-cover border-2 border-slate-700">
+                    <div>
+                        <h3 class="text-white font-black text-sm uppercase tracking-tight">${s.userName}</h3>
+                        <p class="text-blue-400 text-[9px] font-bold uppercase tracking-widest">${s.userPosition} • ${s.userDivision}</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4">
+                    <!-- CHECK IN CARD -->
+                    <div class="bg-white p-5 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-4 py-1.5 bg-blue-50 text-blue-600 rounded-full text-[8px] font-black uppercase tracking-widest italic">Check In Evidence</span>
+                            <span class="text-[9px] font-bold text-slate-400">${dsIn}</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <img src="${s.checkIn.photo}" class="w-full aspect-square object-cover rounded-2xl border-2 border-slate-50">
+                            <div id="map-in-${s.id}" onclick="openFullMap('${s.id}')" 
+                                class="w-full aspect-square rounded-2xl border-2 border-slate-50 bg-slate-50 overflow-hidden cursor-pointer active:scale-95 transition-all">
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <p class="text-[7px] font-black text-slate-300 uppercase tracking-widest">Time Registered</p>
+                                <p class="text-xl font-black text-slate-800 leading-none">${checkInTime}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[7px] font-black text-slate-300 uppercase tracking-widest">Status Radius</p>
+                                <p class="text-[9px] font-black ${s.checkIn.isWithinRadius ? 'text-green-500' : 'text-red-500'} uppercase">${s.checkIn.isWithinRadius ? 'Inside Area' : 'Outside Area'}</p>
+                            </div>
+                        </div>
+
+                        <!-- TAMBAHAN: ALASAN TERLAMBAT & LUAR AREA -->
+                        ${s.statusIn === "Terlambat" ? `
+                        <div class="mt-4 p-3 bg-red-50 border border-red-100 rounded-2xl">
+                            <p class="text-[7px] font-black text-red-400 uppercase tracking-widest">Alasan Terlambat</p>
+                            <p class="text-[10px] font-bold text-red-600 mt-1">${s.lateReason || '-'}</p>
+                        </div>` : ''}
+
+                        ${!s.checkIn.isWithinRadius && s.outsideOfficeReason ? `
+                        <div class="mt-4 p-3 bg-red-50 border border-red-100 rounded-2xl">
+                            <p class="text-[7px] font-black text-red-400 uppercase tracking-widest">Alasan Luar Area</p>
+                            <p class="text-[10px] font-bold text-red-600 mt-1">${s.outsideOfficeReason}</p>
+                        </div>` : ''}
+                    </div>
+
+                    <!-- CHECK OUT CARD -->
+                    ${s.checkOut ? `
+                    <div class="bg-white p-5 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-4 py-1.5 bg-orange-50 text-orange-600 rounded-full text-[8px] font-black uppercase tracking-widest italic">Check Out Evidence</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <img src="${s.checkOut.photo}" class="w-full aspect-square object-cover rounded-2xl border-2 border-slate-50">
+                            <div id="map-out-${s.id}" onclick="openFullMap('${s.id}')" 
+                                class="w-full aspect-square rounded-2xl border-2 border-slate-50 bg-slate-50 overflow-hidden cursor-pointer active:scale-95 transition-all">
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <p class="text-[7px] font-black text-slate-300 uppercase tracking-widest">Time Registered</p>
+                                <p class="text-xl font-black text-slate-800 leading-none">${checkOutTime}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[7px] font-black text-slate-300 uppercase tracking-widest">Status Radius</p>
+                                <p class="text-[9px] font-black ${s.checkOut.isWithinRadius ? 'text-green-500' : 'text-red-500'} uppercase">
+                                    ${s.checkOut.isWithinRadius ? 'Inside Area' : 'Outside Area'}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- TAMBAHAN: STATUS LEMBUR & ALASAN LEMBUR -->
+                        ${s.checkOut.statusOut === "Lembur" ? `
+                        <div class="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-2xl">
+                            <div class="flex justify-between items-center mb-1">
+                                <p class="text-[7px] font-black text-blue-400 uppercase tracking-widest">Informasi Lembur</p>
+                                <span class="bg-blue-600 text-white text-[7px] px-2 py-0.5 rounded-full font-black uppercase">${s.checkOut.overtimeLabel || 'Lembur'}</span>
+                            </div>
+                            <p class="text-[10px] font-bold text-blue-700">${s.checkOut.statusReason || '-'}</p>
+                        </div>` : ''}
+                        
+                        ${!s.checkOut.isWithinRadius && s.checkOut.statusReason ? `
+                        <div class="mt-4 p-3 bg-red-50 border border-red-100 rounded-2xl">
+                            <p class="text-[7px] font-black text-red-400 uppercase tracking-widest">Alasan Luar Area</p>
+                            <p class="text-[10px] font-bold text-red-600 mt-1">${s.checkOut.statusReason}</p>
+                        </div>` : ''}
+                    </div>` : `
+                    <div class="p-8 border-2 border-dashed border-slate-100 rounded-[2.5rem] text-center">
+                        <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Personnel Still On Duty</p>
+                    </div>`}
+                </div>
+                
+                <!-- Detail Info & Remarks -->
+                <div class="mt-6 space-y-4">
+                    <div class="bg-slate-50 p-5 rounded-[2rem] border border-slate-100">
+                        <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-3">Laporan Tugas</p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-[7px] font-black text-slate-400 uppercase">Tipe Kerja</p>
+                                <p class="text-[10px] font-bold text-slate-700">${s.workType || '-'}</p>
+                            </div>
+                            <div>
+                                <p class="text-[7px] font-black text-slate-400 uppercase">Peran Tugas</p>
+                                <p class="text-[10px] font-bold text-slate-700">${s.dutyAs || '-'}</p>
+                            </div>
+                            ${s.checkOut ? `
+                            <div class="col-span-2 pt-2 border-t border-slate-100">
+                                <p class="text-[7px] font-black text-slate-400 uppercase mb-1">Remarks / Pekerjaan</p>
+                                <p class="text-[10px] font-medium text-slate-600 italic leading-relaxed whitespace-pre-wrap justify-text">${s.checkOut.remarks || '-'}</p>
+                            </div>
+                            ${s.checkOut.workPhoto ? `
+                            <div class="col-span-2 mt-4">
+                                <p class="text-[7px] font-black text-slate-400 uppercase mb-2">Dokumentasi Kerja</p>
+                                <div class="relative w-full rounded-2xl overflow-hidden border-2 border-white shadow-md">
+                                    <img src="${s.checkOut.workPhoto}" class="w-full h-auto object-cover">
+                                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-3">
+                                        <p class="text-[8px] text-white font-bold italic">Bukti Pelaksanaan Tugas</p>
+                                    </div>
+                                </div>
+                            </div>
+                            ` : ''}
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            modal.classList.remove('hidden-element');
+
             setTimeout(() => {
-                const mapI = L.map("map-in-" + s.id, {
-                    zoomControl: false,
-                    attributionControl: false
-                }).setView([s.checkIn.lat, s.checkIn.lng], 17);
-                getSatelliteLayer().addTo(mapI);
-                L.circleMarker([s.checkIn.lat, s.checkIn.lng], {
-                    radius: 6,
-                    fillColor: "#3b82f6",
-                    color: "#fff",
-                    weight: 2,
-                    fillOpacity: 1
-                }).addTo(mapI);
-                if (s.checkOut) {
-                    const mapO = L.map("map-out-" + s.id, {
-                        zoomControl: false,
-                        attributionControl: false
-                    }).setView([s.checkOut.lat || s.checkIn.lat, s.checkOut.lng || s.checkIn.lng], 17);
-                    getSatelliteLayer().addTo(mapO);
-                    L.circleMarker([s.checkOut.lat || s.checkIn.lat, s.checkOut.lng || s.checkIn.lng], {
-                        radius: 6,
-                        fillColor: "#f97316",
-                        color: "#fff",
-                        weight: 2,
-                        fillOpacity: 1
-                    }).addTo(mapO);
+                const mapIn = L.map(`map-in-${s.id}`, { zoomControl: false, attributionControl: false }).setView([s.checkIn.lat, s.checkIn.lng], 16);
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(mapIn);
+                L.marker([s.checkIn.lat, s.checkIn.lng]).addTo(mapIn);
+
+                if (s.checkOut && s.checkOut.lat) {
+                    const mapOut = L.map(`map-out-${s.id}`, { zoomControl: false, attributionControl: false }).setView([s.checkOut.lat, s.checkOut.lng], 16);
+                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(mapOut);
+                    L.marker([s.checkOut.lat, s.checkOut.lng]).addTo(mapOut);
                 }
             }, 300);
         };
@@ -2746,12 +2976,11 @@
             s.workType = document.getElementById('edit-log-work-type').value;
             s.dutyAs = document.getElementById('edit-log-duty-as').value;
             
-            // Konversi kembali dari string datetime ke timestamp dan display string time
             const inTimeVal = document.getElementById('edit-log-in-time').value;
             if (inTimeVal) {
                 const inDate = new Date(inTimeVal);
                 s.checkIn.timestamp = inDate.getTime();
-                s.checkIn.time = inDate.toLocaleTimeString('id-ID', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                s.checkIn.time = inDate.toLocaleTimeString('id-ID', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
             }
 
             s.checkIn.lat = parseFloat(document.getElementById('edit-log-in-lat').value);
@@ -2765,7 +2994,7 @@
                 if (outTimeVal) {
                     const outDate = new Date(outTimeVal);
                     s.checkOut.timestamp = outDate.getTime();
-                    s.checkOut.time = outDate.toLocaleTimeString('id-ID', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    s.checkOut.time = outDate.toLocaleTimeString('id-ID', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
                 }
 
                 s.checkOut.lat = parseFloat(document.getElementById('edit-log-out-lat').value);
@@ -2844,7 +3073,7 @@
                 // MERAKIT BARIS TABEL (Susunan Kolom Diubah)
                 html += '<tr><td>' + (i + 1) + '</td><td style="text-align:left">' + s.userName + '</td><td>' + (s.userDivision || '-') + '</td><td>' + (s.userPosition || '-') + '</td><td>' + dsIn + '</td><td>' + s.checkIn.time + '</td><td>' + dsOut + '</td><td>' + (s.checkOut ? s.checkOut.time : '-') + '</td><td>' + dur + '</td><td>' + s.workType + ' / ' + s.dutyAs + '</td><td class="remarks-cell">' + (s.checkOut ? s.checkOut.remarks : '-') + '</td></tr>';
             });
-            html += '</tbody></table><div class="footer"><p>Dicetak pada: ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear() + ', pukul ' + now.toLocaleTimeString('id-ID') + '</p><p>Penanggung Jawab,</p><img src="https://lh3.googleusercontent.com/d/1yhAmuOoGe6GT4UaJEixJi4cadHbUfXTL" class="signature-img"><p><u><b>Media Marbun</b></u></p><p>HRD Manager</p></div></body></html>';
+            html += '</tbody></table><div class="footer"><p>Dicetak pada: ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear() + ', pukul ' + now.toLocaleTimeString('id-ID').replace(/\./g, ':') + '</p><p>Penanggung Jawab,</p><img src="https://lh3.googleusercontent.com/d/1yhAmuOoGe6GT4UaJEixJi4cadHbUfXTL" class="signature-img"><p><u><b>Media Marbun</b></u></p><p>HRD Manager</p></div></body></html>';
             printWin.document.write(html);
             printWin.document.close();
             setTimeout(() => {
