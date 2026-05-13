@@ -1005,7 +1005,7 @@
     </div>
 
     <script>
-        const webAppUrl = "https://script.google.com/macros/s/AKfycbwKUXW6e2x_0XZpBjLA3xsCjCN1zn4cxBM286TSb7RAAvX5ud9SHkeWyShzG26g--bjJQ/exec";
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbxAKMOe382z2EvQN6N7jvU6K879rvoy6ywFUcFy6NAxYUNgsKjxyPk3yFMkrPYCR-uMGA/exec";
 
         // APP STATE
         let users = [];
@@ -1132,15 +1132,25 @@
 
         // UTILITIES
         // FUNGSI GLOBAL UNTUK FORMAT WAKTU (Mencegah Error 1899 & UTC)
-        function formatTime(t) {
-            if (!t) return "";
-            let str = String(t);
-            // Deteksi format ISO dari Google Sheets (1899-12-30T...)
-            if (str.includes('T')) {
-                str = str.split('T')[1].split('.')[0];
-            }
-            return str.replace(/\./g, ':');
-        }
+function formatTime(t) {
+    if (!t) return "";
+    let str = String(t);
+
+    // MENCARI POLA JAM (HH:mm:ss) DALAM TEKS
+    // Ini akan menangkap "08:00:51" dari teks seperti "1899-12-30T08:00:51" 
+    // atau "08:00:51 +0707 Western Indonesia"
+    const match = str.match(/(\d{1,2})[:.](\d{1,2})[:.](\d{1,2})/);
+    
+    if (match) {
+        // Ambil hasil tangkapan dan pastikan selalu 2 digit (padding)
+        const h = match[1].padStart(2, '0');
+        const m = match[2].padStart(2, '0');
+        const s = match[3].padStart(2, '0');
+        return h + ":" + m + ":" + s;
+    }
+
+    return str; // Fallback jika tidak ditemukan pola jam
+}
         // FUNGSI NOTIFIKASI SUARA
         function speakNotification(text) {
             if ('speechSynthesis' in window) {
