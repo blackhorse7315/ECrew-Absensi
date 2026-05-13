@@ -2640,9 +2640,15 @@
                 return str.replace(/\./g, ':');
             };
 
-            const checkInTime = cleanTime(s.checkIn.time);
-            const checkOutTime = s.checkOut ? cleanTime(s.checkOut.time) : "";
+            // PERBAIKAN: Gunakan formatTime global untuk membersihkan waktu (mencegah format 1899/UTC)
+            const checkInTime = formatTime(s.checkIn.time);
+            const checkOutTime = s.checkOut ? formatTime(s.checkOut.time) : "";
             
+            const dateIn = new Date(s.checkIn.timestamp);
+            const dsIn = dateIn.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            const modal = document.getElementById('detail-modal'),
+                  content = document.getElementById('detail-content');
             // ... cari blok window.openFullMap lama (sekitar baris 3221) dan ganti dengan ini ...
 window.openFullMap = function(id) {
     // Cari data berdasarkan ID sesi
