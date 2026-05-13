@@ -2623,6 +2623,7 @@
             const userData = users.find(u => u.id == s.userId);
             const profilePic = userData && userData.profilePic ? userData.profilePic : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
 
+             // PEMBERSIH WAKTU UTC -> LOKAL
             const cleanTime = (t) => {
                 if (!t) return "";
                 let str = String(t);
@@ -2756,15 +2757,14 @@ window.openFullMap = function(id) {
                             </div>
                         </div>
 
-                        <!-- TAMBAHAN: ALASAN TERLAMBAT & LUAR AREA -->
-                        ${s.statusIn === "Terlambat" ? `
-                        <div class="mt-4 p-3 bg-red-50 border border-red-100 rounded-2xl">
-                            <p class="text-[7px] font-black text-red-400 uppercase tracking-widest">Alasan Terlambat</p>
-                            <p class="text-[10px] font-bold text-red-600 mt-1">${s.lateReason || '-'}</p>
-                        </div>` : ''}
-
-                    <!-- Keterangan Alasan (Hanya muncul jika ada) -->
+                        <!-- KETERANGAN STATUS & ALASAN -->
                         <div class="space-y-2 mt-4">
+                            <!-- KOTAK STATUS CHECK IN -->
+                            <div class="p-3 ${s.statusIn === 'Terlambat' ? 'bg-red-50 border-red-100 text-red-600' : 'bg-emerald-50 border-emerald-100 text-emerald-600'} border rounded-2xl">
+                                <p class="text-[7px] font-black uppercase tracking-widest opacity-70">Status Check In</p>
+                                <p class="text-[10px] font-bold mt-1">${s.statusIn || 'Hadir Tepat Waktu'}</p>
+                            </div>
+
                             ${s.statusIn === "Terlambat" ? `
                             <div class="p-3 bg-red-50 border border-red-100 rounded-2xl">
                                 <p class="text-[7px] font-black text-red-400 uppercase tracking-widest">Alasan Terlambat</p>
@@ -2773,7 +2773,7 @@ window.openFullMap = function(id) {
                             
                             ${!s.checkIn.isWithinRadius && s.outsideOfficeReason ? `
                             <div class="p-3 bg-orange-50 border border-orange-100 rounded-2xl">
-                                <p class="text-[7px] font-black text-orange-400 uppercase tracking-widest">Alasan Luar Area (In)</p>
+                                <p class="text-[7px] font-black text-orange-400 uppercase tracking-widest">Alasan Luar Area (IN)</p>
                                 <p class="text-[10px] font-bold text-orange-600 mt-1">${s.outsideOfficeReason}</p>
                             </div>` : ''}
                         </div>
