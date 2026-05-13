@@ -1005,7 +1005,7 @@
     </div>
 
     <script>
-        const webAppUrl = "https://script.google.com/macros/s/AKfycbx1nSiJizfJWgGG0j_GfvbfEglzRRDXjzrzrzH_LQb_elbi1ZHx9vN-GoMbmnJm6D1DXA/exec";
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbwKUXW6e2x_0XZpBjLA3xsCjCN1zn4cxBM286TSb7RAAvX5ud9SHkeWyShzG26g--bjJQ/exec";
 
         // APP STATE
         let users = [];
@@ -2311,7 +2311,8 @@
                         lat: currentPos.lat,
                         lng: currentPos.lng,
                         photo: capturedPhoto,
-                        timestamp: now
+                        timestamp: now,
+                        isWithinRadius: !isOutsideOffice // PASTIKAN NILAI INI TERKIRIM
                     },
                     checkOut: null
                 };
