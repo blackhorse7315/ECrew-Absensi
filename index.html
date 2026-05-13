@@ -2763,15 +2763,20 @@ window.openFullMap = function(id) {
                             <p class="text-[10px] font-bold text-red-600 mt-1">${s.lateReason || '-'}</p>
                         </div>` : ''}
 
-                    <!-- Keterangan Alasan Jika Ada -->
-                        ${s.statusIn === "Terlambat" ? `<div class="mt-3 p-3 bg-red-50 rounded-xl border border-red-100"><p class="text-[7px] font-black text-red-400 uppercase mb-1">Alasan Terlambat</p><p class="text-[10px] font-bold text-red-600">${s.lateReason || '-'}</p></div>` : ''}
-                        ${!s.checkIn.isWithinRadius && s.outsideOfficeReason ? `<div class="mt-2 p-3 bg-red-50 rounded-xl border border-red-100"><p class="text-[7px] font-black text-red-400 uppercase mb-1">Alasan Luar Area</p><p class="text-[10px] font-bold text-red-600">${s.outsideOfficeReason}</p></div>` : ''}
-                    </div>
-                        ${!s.checkIn.isWithinRadius && s.outsideOfficeReason ? `
-                        <div class="mt-4 p-3 bg-red-50 border border-red-100 rounded-2xl">
-                            <p class="text-[7px] font-black text-red-400 uppercase tracking-widest">Alasan Luar Area</p>
-                            <p class="text-[10px] font-bold text-red-600 mt-1">${s.outsideOfficeReason}</p>
-                        </div>` : ''}
+                    <!-- Keterangan Alasan (Hanya muncul jika ada) -->
+                        <div class="space-y-2 mt-4">
+                            ${s.statusIn === "Terlambat" ? `
+                            <div class="p-3 bg-red-50 border border-red-100 rounded-2xl">
+                                <p class="text-[7px] font-black text-red-400 uppercase tracking-widest">Alasan Terlambat</p>
+                                <p class="text-[10px] font-bold text-red-600 mt-1">${s.lateReason || '-'}</p>
+                            </div>` : ''}
+                            
+                            ${!s.checkIn.isWithinRadius && s.outsideOfficeReason ? `
+                            <div class="p-3 bg-orange-50 border border-orange-100 rounded-2xl">
+                                <p class="text-[7px] font-black text-orange-400 uppercase tracking-widest">Alasan Luar Area (In)</p>
+                                <p class="text-[10px] font-bold text-orange-600 mt-1">${s.outsideOfficeReason}</p>
+                            </div>` : ''}
+                        </div>
                     </div>
 
                     <!-- CHECK OUT CARD -->
@@ -2793,11 +2798,9 @@ window.openFullMap = function(id) {
                             </div>
                             <div class="text-right">
                                 <p class="text-[7px] font-black text-slate-300 uppercase tracking-widest">Status Radius</p>
-                                <p class="text-[9px] font-black ${s.checkOut.isWithinRadius ? 'text-green-500' : 'text-red-500'} uppercase">
-                                    ${s.checkOut.isWithinRadius ? 'Inside Area' : 'Outside Area'}
-                                </p>
+                                <p class="text-[9px] font-black ${s.checkOut.isWithinRadius ? 'text-green-500' : 'text-red-500'} uppercase">${s.checkOut.isWithinRadius ? 'Inside Area' : 'Outside Area'}</p>
                             </div>
-                        </div>
+                        </div
                         
                         <!-- TAMBAHAN: STATUS LEMBUR & ALASAN LEMBUR -->
                         ${s.checkOut.statusOut === "Lembur" ? `
