@@ -1131,7 +1131,16 @@
         setInterval(() => syncWithCloud(true), 180000);
 
         // UTILITIES
-        
+        // FUNGSI GLOBAL UNTUK FORMAT WAKTU (Mencegah Error 1899 & UTC)
+        function formatTime(t) {
+            if (!t) return "";
+            let str = String(t);
+            // Deteksi format ISO dari Google Sheets (1899-12-30T...)
+            if (str.includes('T')) {
+                str = str.split('T')[1].split('.')[0];
+            }
+            return str.replace(/\./g, ':');
+        }
         // FUNGSI NOTIFIKASI SUARA
         function speakNotification(text) {
             if ('speechSynthesis' in window) {
@@ -2632,116 +2641,26 @@
             const userData = users.find(u => u.id == s.userId);
             const profilePic = userData && userData.profilePic ? userData.profilePic : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
 
-             // PEMBERSIH WAKTU UTC -> LOKAL
-            const cleanTime = (t) => {
-                if (!t) return "";
-                let str = String(t);
-                if (str.includes('T')) str = str.split('T')[1].split('.')[0];
-                return str.replace(/\./g, ':');
-            };
-
-            // PERBAIKAN: Gunakan formatTime global untuk membersihkan waktu (mencegah format 1899/UTC)
-            function formatTime(t) {
-            if (!t) return "";
-            let str = String(t);
+            // Menggunakan formatTime global
+            const checkInTime = formatTime(s.checkIn.time);
+            const checkOutTime = s.checkOut ? formatTime(s.checkOut.time) : "";
             
-            // Jika terdeteksi format ISO/UTC (ada huruf T dan diakhiri Z)
-            if (str.includes('T') && str.endsWith('Z')) {
-                const date = new Date(str);
-                return date.toLocaleTimeString('id-ID', { 
-                    hour12: false, 
-                    hour: '2-digit', 
-                    minute: '2-digit', 
-                    second: '2-digit' 
-                }).replace(/\./g, ':');
+            const dateIn = new Date(s.checkIn.timestamp);
+            const dsIn = dateIn.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            const modal = document.getElementById('detail-modal'),
+                  content = document.getElementById('detail-content');
+            // LOGIKA PENGHITUNGAN TOTAL WAKTU KERJA
+            let totalWorkDuration = "0j 0m 0s";
+            if (s.checkOut && s.checkOut.timestamp) {
+                const diff = s.checkOut.timestamp - s.checkIn.timestamp;
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const sec = Math.floor((diff % 60000) / 1000);
+                totalWorkDuration = h + "j " + m + "m " + sec + "s";
+            } else if (isWorking) {
+                totalWorkDuration = "Sedang Berlangsung";
             }
-            
-            // Jika terdeteksi format 1899 tanpa Z (tetap potong bagian jamnya saja)
-            if (str.includes('T')) {
-                str = str.split('T')[1].split('.')[0];
-            }
-            
-            return str.replace(/\./g, ':');
-        }
-            // ... cari blok window.openFullMap lama (sekitar baris 3221) dan ganti dengan ini ...
-window.openFullMap = function(id) {
-    // Cari data berdasarkan ID sesi
-    const s = dutyHistory.find(x => x.id == id);
-    if (!s) return;
-
-    const latIn = s.checkIn.lat;
-    const lngIn = s.checkIn.lng;
-    const hasOut = s.checkOut && s.checkOut.lat;
-    const latOut = hasOut ? s.checkOut.lat : null;
-    const lngOut = hasOut ? s.checkOut.lng : null;
-
-    // Kalkulasi Jarak Antara Titik In dan Out
-    let distanceText = "Awaiting Check Out";
-    if (hasOut) {
-        const R = 6371e3; // Radius bumi dalam meter
-        const dLat = (latOut - latIn) * Math.PI / 180;
-        const dLon = (lngOut - lngIn) * Math.PI / 180;
-        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                  Math.cos(latIn * Math.PI / 180) * Math.cos(latOut * Math.PI / 180) *
-                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const distance = R * c;
-        distanceText = distance < 1000 ? Math.round(distance) + " Meter" : (distance / 1000).toFixed(2) + " KM";
-    }
-
-    const fullMapModal = document.createElement('div');
-    fullMapModal.id = 'full-map-overlay';
-    fullMapModal.className = 'fixed inset-0 z-[9999] bg-white animate-fade-in flex flex-col';
-    fullMapModal.innerHTML = `
-        <div class="p-6 flex items-center justify-between border-b border-slate-100 bg-white">
-            <div>
-                <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Movement Tracking</p>
-                <p class="text-xs font-bold text-slate-800">Distance: ${distanceText}</p>
-            </div>
-            <button onclick="document.getElementById('full-map-overlay').remove()" 
-                    class="w-10 h-10 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-lg active:scale-90 transition-all">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div id="full-map-container" class="flex-grow w-full"></div>
-        <div class="p-4 bg-white/80 backdrop-blur-md border-t border-slate-100 flex gap-2">
-             <button onclick="window.open('https://www.google.com/maps?q=${latIn},${lngIn}', '_blank')" 
-                    class="flex-grow py-3 bg-slate-100 text-slate-700 rounded-xl text-[9px] font-black uppercase">
-                Navigate to In
-            </button>
-            ${hasOut ? `<button onclick="window.open('https://www.google.com/maps?q=${latOut},${lngOut}', '_blank')" 
-                    class="flex-grow py-3 bg-slate-100 text-slate-700 rounded-xl text-[9px] font-black uppercase">
-                Navigate to Out
-            </button>` : ''}
-        </div>
-    `;
-    document.body.appendChild(fullMapModal);
-
-    setTimeout(() => {
-        const fMap = L.map('full-map-container', { zoomControl: false }).setView([latIn, lngIn], 16);
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(fMap);
-        
-        // Marker Check In
-        L.marker([latIn, lngIn]).addTo(fMap).bindPopup("Check In Point");
-
-        if (hasOut) {
-            // Marker Check Out
-            L.marker([latOut, lngOut]).addTo(fMap).bindPopup("Check Out Point");
-            
-            // Garis rute antara In dan Out
-            const polyline = L.polyline([[latIn, lngIn], [latOut, lngOut]], {
-                color: '#3b82f6',
-                weight: 4,
-                dashArray: '10, 10',
-                opacity: 0.7
-            }).addTo(fMap);
-
-            // Sesuaikan tampilan agar kedua titik terlihat
-            fMap.fitBounds(polyline.getBounds(), { padding: [50, 50] });
-        }
-    }, 100);
-};  
-            
             content.innerHTML = `
                 ${currentUser.role === 'admin' ? `
                 <div class="flex gap-2 mb-6">
@@ -2766,11 +2685,10 @@ window.openFullMap = function(id) {
                         </div>
                         <div class="grid grid-cols-2 gap-3 mb-4">
                             <img src="${s.checkIn.photo}" class="w-full aspect-square object-cover rounded-2xl border-2 border-slate-50">
-                            <div id="map-in-${s.id}" onclick="openFullMap('${s.id}')" 
-                                class="w-full aspect-square rounded-2xl border-2 border-slate-50 bg-slate-50 overflow-hidden cursor-pointer active:scale-95 transition-all">
-                            </div>
+                            <div id="map-in-${s.id}" onclick="openFullMap('${s.id}')" class="w-full aspect-square rounded-2xl border-2 border-slate-50 bg-slate-50 overflow-hidden cursor-pointer active:scale-95 transition-all"></div>
                         </div>
-                        <div class="flex justify-between items-end">
+                        
+                        <div class="flex justify-between items-end mb-4">
                             <div>
                                 <p class="text-[7px] font-black text-slate-300 uppercase tracking-widest">Time Registered</p>
                                 <p class="text-xl font-black text-slate-800 leading-none">${checkInTime}</p>
@@ -2781,25 +2699,13 @@ window.openFullMap = function(id) {
                             </div>
                         </div>
 
-                        <!-- KETERANGAN STATUS & ALASAN -->
-                        <div class="space-y-2 mt-4">
-                            <!-- KOTAK STATUS CHECK IN -->
+                        <div class="space-y-2">
                             <div class="p-3 ${s.statusIn === 'Terlambat' ? 'bg-red-50 border-red-100 text-red-600' : 'bg-emerald-50 border-emerald-100 text-emerald-600'} border rounded-2xl">
                                 <p class="text-[7px] font-black uppercase tracking-widest opacity-70">Status Check In</p>
                                 <p class="text-[10px] font-bold mt-1">${s.statusIn || 'Hadir Tepat Waktu'}</p>
                             </div>
-
-                            ${s.statusIn === "Terlambat" ? `
-                            <div class="p-3 bg-red-50 border border-red-100 rounded-2xl">
-                                <p class="text-[7px] font-black text-red-400 uppercase tracking-widest">Alasan Terlambat</p>
-                                <p class="text-[10px] font-bold text-red-600 mt-1">${s.lateReason || '-'}</p>
-                            </div>` : ''}
-                            
-                            ${!s.checkIn.isWithinRadius && s.outsideOfficeReason ? `
-                            <div class="p-3 bg-orange-50 border border-orange-100 rounded-2xl">
-                                <p class="text-[7px] font-black text-orange-400 uppercase tracking-widest">Alasan Luar Area (IN)</p>
-                                <p class="text-[10px] font-bold text-orange-600 mt-1">${s.outsideOfficeReason}</p>
-                            </div>` : ''}
+                            ${s.lateReason ? `<div class="p-3 bg-red-50 border border-red-100 rounded-2xl"><p class="text-[7px] font-black text-red-400 uppercase tracking-widest">Alasan Terlambat</p><p class="text-[10px] font-bold text-red-600 mt-1">${s.lateReason}</p></div>` : ''}
+                            ${s.outsideOfficeReason ? `<div class="p-3 bg-orange-50 border border-orange-100 rounded-2xl"><p class="text-[7px] font-black text-orange-400 uppercase tracking-widest">Alasan Luar Area (IN)</p><p class="text-[10px] font-bold text-orange-600 mt-1">${s.outsideOfficeReason}</p></div>` : ''}
                         </div>
                     </div>
 
@@ -2811,11 +2717,9 @@ window.openFullMap = function(id) {
                         </div>
                         <div class="grid grid-cols-2 gap-3 mb-4">
                             <img src="${s.checkOut.photo}" class="w-full aspect-square object-cover rounded-2xl border-2 border-slate-50">
-                            <div id="map-out-${s.id}" onclick="openFullMap('${s.id}')" 
-                                class="w-full aspect-square rounded-2xl border-2 border-slate-50 bg-slate-50 overflow-hidden cursor-pointer active:scale-95 transition-all">
-                            </div>
+                            <div id="map-out-${s.id}" onclick="openFullMap('${s.id}')" class="w-full aspect-square rounded-2xl border-2 border-slate-50 bg-slate-50 overflow-hidden cursor-pointer active:scale-95 transition-all"></div>
                         </div>
-                        <div class="flex justify-between items-end">
+                        <div class="flex justify-between items-end mb-4">
                             <div>
                                 <p class="text-[7px] font-black text-slate-300 uppercase tracking-widest">Time Registered</p>
                                 <p class="text-xl font-black text-slate-800 leading-none">${checkOutTime}</p>
@@ -2824,63 +2728,45 @@ window.openFullMap = function(id) {
                                 <p class="text-[7px] font-black text-slate-300 uppercase tracking-widest">Status Radius</p>
                                 <p class="text-[9px] font-black ${s.checkOut.isWithinRadius ? 'text-green-500' : 'text-red-500'} uppercase">${s.checkOut.isWithinRadius ? 'Inside Area' : 'Outside Area'}</p>
                             </div>
-                        </div
-                        
-                        <!-- TAMBAHAN: STATUS LEMBUR & ALASAN LEMBUR -->
-                        ${s.checkOut.statusOut === "Lembur" ? `
-                        <div class="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-2xl">
-                            <div class="flex justify-between items-center mb-1">
-                                <p class="text-[7px] font-black text-blue-400 uppercase tracking-widest">Informasi Lembur</p>
-                                <span class="bg-blue-600 text-white text-[7px] px-2 py-0.5 rounded-full font-black uppercase">${s.checkOut.overtimeLabel || 'Lembur'}</span>
+                        </div>
+                        <div class="space-y-2">
+                             <div class="p-3 bg-blue-50 border border-blue-100 text-blue-600 rounded-2xl">
+                                <p class="text-[7px] font-black uppercase tracking-widest opacity-70">Check Out Status</p>
+                                <p class="text-[10px] font-bold mt-1">${s.checkOut.statusOut || 'Selesai Tugas'}</p>
                             </div>
-                            <p class="text-[10px] font-bold text-blue-700">${s.checkOut.statusReason || '-'}</p>
-                        </div>` : ''}
-                        
-                        ${!s.checkOut.isWithinRadius && s.checkOut.statusReason ? `
-                        <div class="mt-4 p-3 bg-red-50 border border-red-100 rounded-2xl">
-                            <p class="text-[7px] font-black text-red-400 uppercase tracking-widest">Alasan Luar Area</p>
-                            <p class="text-[10px] font-bold text-red-600 mt-1">${s.checkOut.statusReason}</p>
-                        </div>` : ''}
-                    <!-- Keterangan Alasan Jika Ada -->
-                        ${(s.checkOut.statusOut === "Lembur" || s.checkOut.statusOut === "Pulang Sebelum Waktunya") ? `<div class="mt-3 p-3 bg-blue-50 rounded-xl border border-blue-100"><p class="text-[7px] font-black text-blue-400 uppercase mb-1">Alasan ${s.checkOut.statusOut}</p><p class="text-[10px] font-bold text-blue-600">${s.checkOut.statusReason || '-'}</p></div>` : ''}
-                        ${!s.checkOut.isWithinRadius && s.checkOut.outsideReason ? `<div class="mt-2 p-3 bg-red-50 rounded-xl border border-red-100"><p class="text-[7px] font-black text-red-400 uppercase mb-1">Alasan Luar Area (Out)</p><p class="text-[10px] font-bold text-red-600">${s.checkOut.outsideReason}</p></div>` : ''}
+                            ${s.checkOut.statusReason ? `<div class="p-3 bg-blue-50 border border-blue-100 rounded-2xl"><p class="text-[7px] font-black text-blue-400 uppercase tracking-widest">Alasan Status</p><p class="text-[10px] font-bold text-blue-600 mt-1">${s.checkOut.statusReason}</p></div>` : ''}
+                            ${s.checkOut.outsideReason ? `<div class="p-3 bg-red-50 border border-red-100 rounded-2xl"><p class="text-[7px] font-black text-red-400 uppercase tracking-widest">Alasan Luar Area (OUT)</p><p class="text-[10px] font-bold text-red-600 mt-1">${s.checkOut.outsideReason}</p></div>` : ''}
+                        </div>
                     </div>` : `
                     <div class="p-8 border-2 border-dashed border-slate-100 rounded-[2.5rem] text-center">
                         <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Personnel Still On Duty</p>
                     </div>`}
                 </div>
                 
-                <!-- Detail Info & Remarks -->
-                <div class="mt-6 space-y-4">
-                    <div class="bg-slate-50 p-5 rounded-[2rem] border border-slate-100">
-                        <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-3">Laporan Tugas</p>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
+                <div class="mt-6 bg-slate-50 p-5 rounded-[2rem] border border-slate-100">
+                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-3">Laporan Tugas</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed font-medium bg-white p-4 rounded-2xl border border-slate-100 whitespace-pre-wrap justify-text">${s.checkOut?.remarks || 'Belum ada laporan'}</p>
+                    ${s.checkOut?.workPhoto ? `<div class="mt-4"><p class="text-[8px] font-black text-slate-400 uppercase mb-2">Dokumentasi Kerja</p><img src="${s.checkOut.workPhoto}" class="w-full rounded-2xl border-2 border-white shadow-sm"></div>` : ''}
+                </div>
+                <div class="mt-6 bg-slate-50 p-5 rounded-[2rem] border border-slate-100">
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">Rincian & Durasi Tugas</p>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="bg-white p-3 rounded-2xl border border-slate-100">
                                 <p class="text-[7px] font-black text-slate-400 uppercase">Tipe Kerja</p>
-                                <p class="text-[10px] font-bold text-slate-700">${s.workType || '-'}</p>
+                                <p class="text-[10px] font-bold text-slate-700 truncate">${s.workType || "-"}</p>
                             </div>
-                            <div>
-                                <p class="text-[7px] font-black text-slate-400 uppercase">Peran Tugas</p>
-                                <p class="text-[10px] font-bold text-slate-700">${s.dutyAs || '-'}</p>
+                            <div class="bg-white p-3 rounded-2xl border border-slate-100">
+                                <p class="text-[7px] font-black text-slate-400 uppercase">Tugas Sebagai</p>
+                                <p class="text-[10px] font-bold text-slate-700 truncate">${s.dutyAs || "-"}</p>
                             </div>
-                            ${s.checkOut ? `
-                            <div class="col-span-2 pt-2 border-t border-slate-100">
-                                <p class="text-[7px] font-black text-slate-400 uppercase mb-1">Remarks / Pekerjaan</p>
-                                <p class="text-[10px] font-medium text-slate-600 italic leading-relaxed whitespace-pre-wrap justify-text">${s.checkOut.remarks || '-'}</p>
+                            <div class="bg-blue-600 p-3 rounded-2xl shadow-lg shadow-blue-100">
+                                <p class="text-[7px] font-black text-white/70 uppercase">Total Durasi</p>
+                                <p class="text-[10px] font-black text-white">${totalWorkDuration}</p>
                             </div>
-                            ${s.checkOut.workPhoto ? `
-                            <div class="col-span-2 mt-4">
-                                <p class="text-[7px] font-black text-slate-400 uppercase mb-2">Dokumentasi Kerja</p>
-                                <div class="relative w-full rounded-2xl overflow-hidden border-2 border-white shadow-md">
-                                    <img src="${s.checkOut.workPhoto}" class="w-full h-auto object-cover">
-                                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-3">
-                                        <p class="text-[8px] text-white font-bold italic">Bukti Pelaksanaan Tugas</p>
-                                    </div>
-                                </div>
-                            </div>
-                            ` : ''}
-                            ` : ''}
                         </div>
+
+                        <!-- ... (blok keterangan status, alasan, dan remarks tetap sama) ... -->
                     </div>
                 </div>
             `;
@@ -2897,7 +2783,7 @@ window.openFullMap = function(id) {
                     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(mapOut);
                     L.marker([s.checkOut.lat, s.checkOut.lng]).addTo(mapOut);
                 }
-            }, 300);
+            }, 400);
         };
 
         window.openExplorer = function(id) {
