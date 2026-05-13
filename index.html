@@ -2319,6 +2319,14 @@
                     showFormError("Tambahan foto dokumentasi wajib diunggah!");
                     return;
                 }
+                 let outsideReasonOut = "";
+                if (isOutsideOffice) {
+                    outsideReasonOut = document.getElementById('outside-office-reason').value.trim();
+                    if (!outsideReasonOut) {
+                        showFormError("Isi alasan berada di luar radius kantor!");
+                        return;
+                    }
+                }
                 const active = dutyHistory.find(s => s.checkOut === null && s.userId == currentUser.id);
                 if (active) {
                     active.workType = wt;
@@ -2345,7 +2353,7 @@
                     } else {
                         sO = "Tugas Hari Minggu"
                     }
-                    active.checkOut = {
+                   active.checkOut = {
                         time: timeStr,
                         lat: currentPos.lat,
                         lng: currentPos.lng,
@@ -2355,6 +2363,7 @@
                         timestamp: now,
                         statusOut: sO,
                         statusReason: rO,
+                        outsideReason: outsideReasonOut, // SIMPAN KE PROPERTI TERPISAH
                         overtimeLabel: (sO === "Lembur" ? calculateOvertimeDuration(now) : null)
                     };
                     currentSession = active;
