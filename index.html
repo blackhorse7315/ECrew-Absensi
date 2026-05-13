@@ -1005,7 +1005,7 @@
     </div>
 
     <script>
-        const webAppUrl = "https://script.google.com/macros/s/AKfycbydrTdTJZCkOtcu-bDMeiOp3QQ4yq1dyr9tVgQbKVTqZSksTzXAmcn_-2pIUWQtUGXD/exec";
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbx1nSiJizfJWgGG0j_GfvbfEglzRRDXjzrzrzH_LQb_elbi1ZHx9vN-GoMbmnJm6D1DXA/exec";
 
         // APP STATE
         let users = [];
@@ -2641,14 +2641,28 @@
             };
 
             // PERBAIKAN: Gunakan formatTime global untuk membersihkan waktu (mencegah format 1899/UTC)
-            const checkInTime = formatTime(s.checkIn.time);
-            const checkOutTime = s.checkOut ? formatTime(s.checkOut.time) : "";
+            function formatTime(t) {
+            if (!t) return "";
+            let str = String(t);
             
-            const dateIn = new Date(s.checkIn.timestamp);
-            const dsIn = dateIn.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-
-            const modal = document.getElementById('detail-modal'),
-                  content = document.getElementById('detail-content');
+            // Jika terdeteksi format ISO/UTC (ada huruf T dan diakhiri Z)
+            if (str.includes('T') && str.endsWith('Z')) {
+                const date = new Date(str);
+                return date.toLocaleTimeString('id-ID', { 
+                    hour12: false, 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    second: '2-digit' 
+                }).replace(/\./g, ':');
+            }
+            
+            // Jika terdeteksi format 1899 tanpa Z (tetap potong bagian jamnya saja)
+            if (str.includes('T')) {
+                str = str.split('T')[1].split('.')[0];
+            }
+            
+            return str.replace(/\./g, ':');
+        }
             // ... cari blok window.openFullMap lama (sekitar baris 3221) dan ganti dengan ini ...
 window.openFullMap = function(id) {
     // Cari data berdasarkan ID sesi
