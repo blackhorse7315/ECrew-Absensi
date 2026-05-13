@@ -1751,7 +1751,7 @@
                 if (container) container.innerHTML = '<div class="text-center py-16 bg-white rounded-[2rem] border-2 border-dashed border-slate-100"><p class="text-slate-300 text-xs font-bold uppercase">Data tidak ditemukan</p></div>';
                 return;
             }
-            filtered.forEach(s => {
+             filtered.forEach(s => {
                 const isC = s.checkOut !== null,
                     dateObj = new Date(s.checkIn.timestamp),
                     df = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -2643,11 +2643,6 @@
             const checkInTime = cleanTime(s.checkIn.time);
             const checkOutTime = s.checkOut ? cleanTime(s.checkOut.time) : "";
             
-            const dateIn = new Date(s.checkIn.timestamp);
-            const dsIn = dateIn.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-
-            const modal = document.getElementById('detail-modal'),
-                  content = document.getElementById('detail-content');
             // ... cari blok window.openFullMap lama (sekitar baris 3221) dan ganti dengan ini ...
 window.openFullMap = function(id) {
     // Cari data berdasarkan ID sesi
