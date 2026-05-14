@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ECrew Attendant List - Transwisata Prima Aviation
+    <title>ECrew-Attendant List - Transwisata Prima Aviation
 </title>
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -603,20 +603,22 @@
                     </div>
 
                     <!-- Camera Section -->
-                    <div class="relative w-full aspect-square bg-slate-50 rounded-[2rem] overflow-hidden mb-8 border border-slate-100">
-                        <video id="camera-preview" autoplay playsinline class="w-full h-full"></video>
-                        <canvas id="photo-canvas" class="hidden"></canvas>
-                        <img id="photo-result" class="hidden-element w-full h-full object-cover" />
-                        <div id="camera-controls" class="absolute bottom-6 inset-x-0 flex justify-center">
-                            <button id="btn-capture" onclick="takeSnapshot()" class="bg-white text-slate-900 px-8 py-3 rounded-full font-bold shadow-2xl flex items-center gap-2 hover:bg-blue-600 hover:text-white transition-all">
-                                <i class="fas fa-camera text-blue-600"></i> AMBIL FOTO
+                    <div class="mb-8">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase mb-3 block tracking-widest">Otentikasi Visual</label>
+                        <div class="relative w-full aspect-square bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white">
+                            <video id="camera-preview" class="w-full h-full object-cover"></video>
+                            <img id="photo-result" class="hidden-element w-full h-full object-cover">
+                            <canvas id="photo-canvas" class="hidden"></canvas>
+                        </div>
+                        <div class="flex gap-3 mt-4">
+                            <button id="btn-capture" onclick="takeSnapshot()" class="flex-grow py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-all">
+                                <i class="fas fa-camera mr-2"></i> Ambil Foto
                             </button>
-                            <button id="btn-retake" onclick="resetCamera()" class="hidden-element bg-slate-900/80 text-white px-8 py-3 rounded-full font-bold shadow-2xl flex items-center gap-2 backdrop-blur-md">
-                                <i class="fas fa-redo"></i> ULANGI
+                            <button id="btn-retake" onclick="resetCamera()" class="hidden-element flex-grow py-4 bg-slate-100 text-slate-400 rounded-2xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all">
+                                <i class="fas fa-redo mr-2"></i> Foto Ulang
                             </button>
                         </div>
                     </div>
-
                     <!-- Form Fields -->
                     <div id="form-fields" class="space-y-5">
                         <div class="grid grid-cols-2 gap-3">
@@ -651,7 +653,7 @@
                         </div>
 
                         <div id="late-reason-container" class="hidden-element">
-                            <label class="text-[10px] font-bold text-red-500 uppercase mb-2 block tracking-widest">Alasan Terlambat (Wajib diisi)</label>
+                            <label class="text-[10px] font-bold text-red-500 uppercase mb-2 block tracking-widest">Alasan Terlambat, karena anda check in diatas pukul 09:01 (Wajib diisi)</label>
                             <textarea id="late-reason" rows="2" class="w-full p-4 bg-red-50 border border-red-200 rounded-2xl outline-none text-sm font-medium resize-none" placeholder="Kenapa terlambat?"></textarea>
                         </div>
 
@@ -985,13 +987,15 @@
     <div id="explorer-modal" class="fixed inset-0 z-[700] bg-white hidden-element">
         <div class="absolute top-6 left-6 z-[710] flex items-center gap-3">
             <button onclick="closeExplorer()" class="w-12 h-12 bg-white shadow-2xl rounded-full flex items-center justify-center text-slate-800 active:scale-90 transition-transform"><i class="fas fa-arrow-left"></i></button>
-            <div class="bg-white px-4 py-2 shadow-2xl rounded-2xl border border-slate-100">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Lokasi</p>
-                <p class="text-xs font-bold text-blue-600">Peta Jalur Tugas</p>
+            <div class="bg-white px-5 py-3 shadow-2xl rounded-2xl border border-slate-100 min-w-[150px]">
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Tracking Movement</p>
+                <p id="explorer-distance-text" class="text-xs font-black text-blue-600">Menghitung jarak...</p>
             </div>
         </div>
-        <button onclick="closeExplorer()" class="absolute top-6 right-6 z-[710] w-12 h-12 bg-red-500 text-white shadow-2xl rounded-full flex items-center justify-center active:scale-90 transition-transform"><i class="fas fa-times"></i></button>
+        <button onclick="closeExplorer()" class="absolute top-6 right-6 z-[710] w-12 h-12 bg-slate-900 text-white shadow-2xl rounded-full flex items-center justify-center active:scale-90 transition-transform"><i class="fas fa-times"></i></button>
         <div id="full-explorer-map"></div>
+        <!-- Shortcut Navigasi -->
+        <div id="explorer-nav-buttons" class="absolute bottom-8 left-1/2 -translate-x-1/2 z-[710] flex gap-3 w-[90%] max-w-sm"></div>
     </div>
 
     <!-- Success Feedback Modal -->
@@ -1005,7 +1009,7 @@
     </div>
 
     <script>
-        const webAppUrl = "https://script.google.com/macros/s/AKfycbwAaeS3_MOY9ePtUsknrwo2VQwMfzqn7ExjU8ei7ovplFp0XcUPA1k9m6rXOUhkshw4Gg/exec";
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbxPz74lH6-mVAoWvHUN-tVbn6-Vm7gqhFiXrfsw63rrfmARGFvuopgnyVgGgUOGqm9iWg/exec";
 
         // APP STATE
         let users = [];
@@ -1131,16 +1135,38 @@
         setInterval(() => syncWithCloud(true), 180000);
 
         // UTILITIES
-        
-        // FUNGSI NOTIFIKASI SUARA
-        function speakNotification(text) {
+        // FUNGSI GLOBAL UNTUK FORMAT WAKTU (Mencegah Error 1899 & UTC)
+        function formatTime(t) {
+            if (!t) return "";
+            let str = String(t);
+            
+            // Jika mengandung 'T' (ISO format 1899-12-30T13:48:16)
+            if (str.includes('T')) {
+                str = str.split('T')[1].split('.')[0];
+            }
+            
+            // Jika mengandung '+' atau spasi (Format +0707 Western Indonesia...)
+            // Kita ambil 8 karakter pertama (HH:mm:ss)
+            if (str.includes('+') || str.includes(' ')) {
+                const parts = str.split(' ');
+                // Cari bagian yang mengandung titik dua (jam)
+                const timePart = parts.find(p => p.includes(':') || p.includes('.'));
+                if (timePart) str = timePart;
+            }
+
+            return str.replace(/\./g, ':').substring(0, 8); // Ambil HH:mm:ss saja
+        }
+
+        // --- NEW: FUNGSI NOTIFIKASI SUARA (Text-to-Speech) ---
+        window.speakNotification = function(text) {
             if ('speechSynthesis' in window) {
                 const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'id-ID'; // Menggunakan suara bahasa Indonesia
-                utterance.rate = 1.0; // Kecepatan normal
+                utterance.lang = 'id-ID'; // Set Bahasa Indonesia
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
                 window.speechSynthesis.speak(utterance);
             }
-        }
+        };
 
         // PERCEPATAN 2: FUNGSI KOMPRESI GAMBAR OTOMATIS
         // Mengecilkan ukuran gambar dari MB menjadi KB sebelum dikirim ke server
@@ -1190,7 +1216,7 @@
                 hour: '2-digit',
                 minute: '2-digit',
                 second: '2-digit'
-            });
+            }).replace(/\./g, ':'); // Mengganti titik menjadi titik dua
             const clockEl = document.getElementById('current-time'),
                 dateEl = document.getElementById('current-date');
             if (clockEl) clockEl.textContent = timeStr;
@@ -1341,11 +1367,17 @@
 
         window.resetCamera = function() {
             capturedPhoto = null;
-            document.getElementById('camera-preview').classList.remove('hidden-element');
-            document.getElementById('photo-result').classList.add('hidden-element');
-            document.getElementById('btn-capture').classList.remove('hidden-element');
-            document.getElementById('btn-retake').classList.add('hidden-element');
-            document.getElementById('btn-submit').classList.add('btn-disabled');
+            const preview = document.getElementById('camera-preview');
+            const result = document.getElementById('photo-result');
+            const btnCap = document.getElementById('btn-capture');
+            const btnRet = document.getElementById('btn-retake');
+            const btnSub = document.getElementById('btn-submit');
+
+            if (preview) preview.classList.remove('hidden-element');
+            if (result) result.classList.add('hidden-element');
+            if (btnCap) btnCap.classList.remove('hidden-element');
+            if (btnRet) btnRet.classList.add('hidden-element');
+            if (btnSub) btnSub.classList.add('btn-disabled');
         };
 
         // AUTH & VIEWS
@@ -1751,13 +1783,15 @@
                 if (container) container.innerHTML = '<div class="text-center py-16 bg-white rounded-[2rem] border-2 border-dashed border-slate-100"><p class="text-slate-300 text-xs font-bold uppercase">Data tidak ditemukan</p></div>';
                 return;
             }
-            filtered.forEach(s => {
+             filtered.forEach(s => {
                 const isC = s.checkOut !== null,
                     dateObj = new Date(s.checkIn.timestamp),
-                    // PERBAIKAN: Format tanggal menjadi [12 Sept 2026]
                     df = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
                 
-                if (container) container.insertAdjacentHTML('beforeend', '<div onclick="showDetail(\'' + s.id + '\')" class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-50 flex items-center justify-between active:scale-[0.98] transition-all cursor-pointer animate-fade"><div class="flex items-center gap-4"><div class="relative"><img src="' + s.checkIn.photo + '" class="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-md">' + (isC ? '<div class="absolute -top-1 -right-1 w-6 h-6 bg-blue-500 rounded-lg flex items-center justify-center text-white border border-white"><i class="fas fa-check text-[8px]"></i></div>' : '') + '</div><div class="flex-grow"><h4 class="text-xs font-black text-slate-800">' + s.userName + '</h4><p class="text-[8px] font-bold text-slate-400 uppercase tracking-tight">' + (s.userDivision || "") + ' [' + df + ']' + '</p><div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-50"><div><p class="text-[7px] font-black text-slate-400 uppercase tracking-widest">Check In Time</p><p class="text-[9px] font-bold text-blue-600">' + s.checkIn.time + '</p></div><div><p class="text-[7px] font-black text-slate-400 uppercase tracking-widest">Check Out Time</p><p class="text-[9px] ' + (isC ? 'text-slate-700 font-bold' : 'text-blue-500 animate-pulse font-black') + '">' + (isC ? s.checkOut.time : 'AKTIF') + '</p></div></div></div></div><div class="w-8 h-8 bg-slate-50 rounded-full flex items-center justify-center text-slate-200"><i class="fas fa-chevron-right text-[10px]"></i></div></div>');
+                const checkInTime = formatTime(s.checkIn.time);
+                const checkOutTime = isC ? formatTime(s.checkOut.time) : 'AKTIF';
+
+                if (container) container.insertAdjacentHTML('beforeend', '<div onclick="showDetail(\'' + s.id + '\')" class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-50 flex items-center justify-between active:scale-[0.98] transition-all cursor-pointer animate-fade"><div class="flex items-center gap-4"><div class="relative"><img src="' + s.checkIn.photo + '" class="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-md">' + (isC ? '<div class="absolute -top-1 -right-1 w-6 h-6 bg-blue-500 rounded-lg flex items-center justify-center text-white border border-white"><i class="fas fa-check text-[8px]"></i></div>' : '') + '</div><div class="flex-grow"><h4 class="text-xs font-black text-slate-800">' + s.userName + '</h4><p class="text-[8px] font-bold text-slate-400 uppercase tracking-tight">' + (s.userDivision || "") + ' [' + df + ']' + '</p><div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-50"><div><p class="text-[7px] font-black text-slate-400 uppercase tracking-widest">Check In Time</p><p class="text-[9px] font-bold text-blue-600">' + checkInTime + '</p></div><div><p class="text-[7px] font-black text-slate-400 uppercase tracking-widest">Check Out Time</p><p class="text-[9px] ' + (isC ? 'text-slate-700 font-bold' : 'text-blue-500 animate-pulse font-black') + '">' + checkOutTime + '</p></div></div></div></div><div class="w-8 h-8 bg-slate-50 rounded-full flex items-center justify-center text-slate-200"><i class="fas fa-chevron-right text-[10px]"></i></div></div>');
             });
         };
 
@@ -2093,7 +2127,6 @@
             currentMode = mode;
             workPhotoBase64 = null;
             document.getElementById('main-actions').classList.add('hidden-element');
-            // document.getElementById('secondary-actions').classList.add('hidden-element'); // Hide secondary buttons (if applicable)
             document.getElementById('status-banner').classList.add('hidden-element');
             document.getElementById('user-info-section').classList.add('hidden-element');
             document.getElementById('birthday-section').classList.add('hidden-element');
@@ -2249,9 +2282,15 @@
                     showFormError("Isi alasan berada di luar radius kantor!");
                     return;
                 }
+                // VALIDASI KERAS: Cek jika hanya berisi tanda hubung
+                if (officeReason === "-" || officeReason === "--") {
+                    showFormError("⚠️ TINDAKAN DITOLAK! Harap masukkan alasan diluar radius office yang valid dan jelas, dilarang hanya menggunakan tanda hubung.");
+                    return;
+                }
             }
-            const timeStr = document.getElementById('current-time').textContent,
-                now = Date.now(),
+            // Memastikan waktu yang diambil dari jam dashboard menggunakan format titik dua
+            const timeStr = document.getElementById('current-time').textContent.replace(/\./g, ':');
+            const now = Date.now(),
                 dateObj = new Date(),
                 day = dateObj.getDay(),
                 h = dateObj.getHours(),
@@ -2268,9 +2307,14 @@
                     targetIn = parseInt(targetInStr.replace(':', ''));
                 if (day !== 0 && timeVal > targetIn) {
                     status = "Terlambat";
-                    reason = document.getElementById('late-reason').value;
-                    if (!reason.trim()) {
+                    reason = document.getElementById('late-reason').value.trim();
+                    if (!reason) {
                         showFormError("Isi alasan!");
+                        return;
+                    }
+                    // VALIDASI KERAS: Alasan Terlambat
+                    if (reason === "-" || reason === "--") {
+                        showFormError("⚠️ TINDAKAN DITOLAK! Harap masukkan alasan terlambat yang valid, dilarang hanya menggunakan tanda hubung.");
                         return;
                     }
                 }
@@ -2291,7 +2335,8 @@
                         lat: currentPos.lat,
                         lng: currentPos.lng,
                         photo: capturedPhoto,
-                        timestamp: now
+                        timestamp: now,
+                        isWithinRadius: !isOutsideOffice
                     },
                     checkOut: null
                 };
@@ -2307,6 +2352,19 @@
                 if (!workPhotoBase64) {
                     showFormError("Tambahan foto dokumentasi wajib diunggah!");
                     return;
+                }
+                 let outsideReasonOut = "";
+                if (isOutsideOffice) {
+                    outsideReasonOut = document.getElementById('outside-office-reason').value.trim();
+                    if (!outsideReasonOut) {
+                        showFormError("Isi alasan berada di luar radius kantor!");
+                        return;
+                    }
+                    // VALIDASI KERAS: Cek jika hanya berisi tanda hubung (Check Out)
+                    if (outsideReasonOut === "-" || outsideReasonOut === "--") {
+                        showFormError("⚠️ TINDAKAN DITOLAK! Harap masukkan alasan diluar radius office yang valid dan jelas, dilarang hanya menggunakan tanda hubung.");
+                        return;
+                    }
                 }
                 const active = dutyHistory.find(s => s.checkOut === null && s.userId == currentUser.id);
                 if (active) {
@@ -2331,10 +2389,15 @@
                             showFormError("Isi alasan!");
                             return;
                         }
+                        // VALIDASI KERAS: Alasan Lembur / Pulang Awal
+                            if (rO === "-" || rO === "--") {
+                                showFormError("⚠️ TINDAKAN DITOLAK! Harap masukkan alasan yang valid, dilarang hanya menggunakan tanda hubung.");
+                                return;
+                        }
                     } else {
                         sO = "Tugas Hari Minggu"
                     }
-                    active.checkOut = {
+                   active.checkOut = {
                         time: timeStr,
                         lat: currentPos.lat,
                         lng: currentPos.lng,
@@ -2344,6 +2407,8 @@
                         timestamp: now,
                         statusOut: sO,
                         statusReason: rO,
+                        outsideReason: outsideReasonOut, 
+                        isWithinRadius: !isOutsideOffice,
                         overtimeLabel: (sO === "Lembur" ? calculateOvertimeDuration(now) : null)
                     };
                     currentSession = active;
@@ -2477,18 +2542,20 @@
                     if (!grouped[key]) grouped[key] = [];
                     grouped[key].push(s);
                 });
-                Object.keys(grouped).forEach(key => {
-                    if (list) list.insertAdjacentHTML('beforeend', '<div class="flex items-center gap-3 py-2 px-2"><span class="h-px bg-slate-100 flex-grow"></span><span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">' + key + '</span><span class="h-px bg-slate-100 flex-grow"></span></div>');
-                    grouped[key].forEach(s => {
-                        const isC = s.checkOut !== null, 
-                              dateObj = new Date(s.checkIn.timestamp),
-                              // PERBAIKAN: Format tanggal menjadi [12 Sept 2026]
-                              df = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+               Object.keys(grouped).forEach(key => {
+                if (list) list.insertAdjacentHTML('beforeend', '<div class="flex items-center gap-3 py-2 px-2"><span class="h-px bg-slate-100 flex-grow"></span><span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">' + key + '</span><span class="h-px bg-slate-100 flex-grow"></span></div>');
+                grouped[key].forEach(s => {
+                    const isC = s.checkOut !== null, 
+                          dateObj = new Date(s.checkIn.timestamp),
+                          df = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 
-                        if (list) list.insertAdjacentHTML('beforeend', '<div onclick="showDetail(\'' + s.id + '\')" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-50 flex items-center justify-between active:scale-[0.98] transition-all cursor-pointer animate-fade"><div class="flex items-center gap-5"><div class="relative"><img src="' + s.checkIn.photo + '" class="w-16 h-16 rounded-2xl object-cover border-4 border-white shadow-lg">' + (isC ? '<div class="absolute -bottom-1 -right-1 w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center text-white border-2 border-white shadow-md"><i class="fas fa-check text-[10px]"></i></div>' : '') + '</div><div class="flex-grow"><h4 class="text-sm font-black text-slate-800">' + s.userName + '</h4><p class="text-[10px] font-black text-slate-400 mt-0.5">' + s.userPosition + " - " + s.userDivision + " [" + df + "]" + '</p><div class="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-slate-50"><div><p class="text-[7px] font-black text-slate-400 uppercase tracking-widest">Check In Time</p><p class="text-[11px] font-bold text-blue-600">' + s.checkIn.time + '</p></div><div><p class="text-[7px] font-black text-slate-400 uppercase tracking-widest">Check Out Time</p><p class="text-[11px] ' + (isC ? 'text-slate-700 font-bold' : 'text-blue-500 font-black animate-pulse') + '">' + (isC ? s.checkOut.time : 'AKTIF') + '</p></div></div></div></div><div class="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-300"><i class="fas fa-chevron-right text-xs"></i></div></div>');
-                    });
+                    const cInTime = formatTime(s.checkIn.time);
+                    const cOutTime = isC ? formatTime(s.checkOut.time) : 'AKTIF';
+
+                    if (list) list.insertAdjacentHTML('beforeend', '<div onclick="showDetail(\'' + s.id + '\')" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-50 flex items-center justify-between active:scale-[0.98] transition-all cursor-pointer animate-fade"><div class="flex items-center gap-5"><div class="relative"><img src="' + s.checkIn.photo + '" class="w-16 h-16 rounded-2xl object-cover border-4 border-white shadow-lg">' + (isC ? '<div class="absolute -bottom-1 -right-1 w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center text-white border-2 border-white shadow-md"><i class="fas fa-check text-[10px]"></i></div>' : '') + '</div><div class="flex-grow"><h4 class="text-sm font-black text-slate-800">' + s.userName + '</h4><p class="text-[10px] font-black text-slate-400 mt-0.5">' + s.userPosition + " - " + s.userDivision + " [" + df + "]" + '</p><div class="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-slate-50"><div><p class="text-[7px] font-black text-slate-400 uppercase tracking-widest">Check In Time</p><p class="text-[11px] font-bold text-blue-600">' + cInTime + '</p></div><div><p class="text-[7px] font-black text-slate-400 uppercase tracking-widest">Check Out Time</p><p class="text-[11px] ' + (isC ? 'text-slate-700 font-bold' : 'text-blue-500 font-black animate-pulse') + '">' + cOutTime + '</p></div></div></div></div><div class="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-300"><i class="fas fa-chevron-right text-xs"></i></div></div>');
                 });
-            }
+            });
+        }
 
             // --- LOGIKA PERSONAL DATA (PENTING) ---
             const btnPersonal = document.getElementById('btn-open-personal');
@@ -2581,6 +2648,15 @@
         window.handleWorkPhoto = function(input) {
             const file = input.files[0];
             if (file) {
+
+                // VALIDASI KERAS: Batasi ukuran file (contoh: maks 5MB)
+                const fileSizeMB = file.size / (1024 * 1024);
+                if (fileSizeMB > 5) {
+                    showFormError("⚠️ UKURAN FILE TERLALU BESAR! Foto dokumentasi maksimal 5MB. Harap gunakan foto dengan resolusi lebih rendah atau kompres terlebih dahulu.");
+                    input.value = ""; // Reset input
+                    return;
+                }
+
                 const reader = new FileReader();
                 reader.onload = async (e) => {
                     // Kompresi foto laporan / remarks
@@ -2597,76 +2673,268 @@
         window.showDetail = function(id) {
             const s = dutyHistory.find(x => x.id == id);
             if (!s) return;
-            document.getElementById('detail-id').textContent = "ID SESI: " + s.id;
-            const content = document.getElementById('detail-content'),
-                u = users.find(user => user.id == s.userId),
-                pPic = (u && u.profilePic) ? u.profilePic : (s.userProfilePic || ""),
-                detailAvatar = pPic ? '<img src="' + pPic + '" class="w-full h-full object-cover">' : '<i class="fas fa-user text-white/40 text-2xl"></i>';
 
-            content.innerHTML = (currentUser.role === 'admin' ? '<div class="flex gap-2 mb-6"><button onclick="editLog(\'' + s.id + '\')" class="flex-grow py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black shadow-lg">EDIT DATA</button><button onclick="deleteLog(\'' + s.id + '\')" class="px-4 py-3 bg-red-50 text-red-500 rounded-xl text-[10px] font-black border border-red-100">HAPUS</button></div>' : '') + '<div class="p-6 bg-slate-900 rounded-[2rem] text-white flex items-center gap-5 shadow-xl"><div class="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center overflow-hidden border border-white/20">' + detailAvatar + '</div><div><h4 class="text-lg font-black">' + s.userName + '</h4><p class="text-xs font-bold text-blue-400 uppercase tracking-widest">' + s.userPosition + ' - ' + s.userDivision + '</p></div></div><div class="grid grid-cols-2 gap-4"><div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 text-center"><p class="text-[8px] font-black text-blue-400 uppercase tracking-widest mb-1">Tipe</p><p class="text-xs font-bold text-slate-700">' + s.workType + '</p></div><div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center"><p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Peran</p><p class="text-xs font-bold text-slate-700">' + s.dutyAs + '</p></div></div><div class="space-y-3"><div class="p-4 rounded-2xl border flex items-center gap-4 ' + (s.statusIn === 'Terlambat' ? 'bg-red-50 border-red-100 text-red-700' : 'bg-emerald-50 border-emerald-100 text-emerald-700') + '"><i class="fas ' + (s.statusIn === 'Terlambat' ? 'fa-clock' : 'fa-check-circle') + ' text-lg"></i><div><p class="text-[8px] font-black uppercase tracking-widest opacity-60">Status Masuk</p><p class="text-xs font-bold">' + s.statusIn + '</p>' + (s.lateReason ? '<p class="text-[10px] mt-1 italic">"' + s.lateReason + '"</p>' : '') + (s.outsideOfficeReason ? '<p class="text-[10px] mt-1 font-bold text-orange-600 underline">Luar Radius: ' + s.outsideOfficeReason + '</p>' : '') + '</div></div>' + (s.checkOut ? '<div class="p-4 rounded-2xl border flex items-center gap-4 ' + (s.checkOut.statusOut === 'Lembur' ? 'bg-blue-50 border-blue-100 text-blue-700' : s.checkOut.statusOut === 'Pulang Sebelum Waktunya' ? 'bg-orange-50 border-orange-100 text-orange-700' : 'bg-emerald-50 border-emerald-100 text-emerald-700') + '"><i class="fas fa-door-open text-lg"></i><div><p class="text-[8px] font-black uppercase tracking-widest opacity-60">Status Keluar</p><p class="text-xs font-bold">' + s.checkOut.statusOut + '</p>' + (s.checkOut.statusReason ? '<p class="text-[10px] mt-1 italic">"' + s.checkOut.statusReason + '"</p>' : '') + '</div></div>' + (s.checkOut.overtimeLabel ? '<div class="p-4 rounded-2xl border border-blue-200 bg-blue-600 text-white flex items-center gap-4 shadow-lg shadow-blue-200"><i class="fas fa-bolt text-lg"></i><div><p class="text-[8px] font-black uppercase tracking-widest opacity-70 text-blue-100">Lama Lembur</p><p class="text-xs font-black">' + s.checkOut.overtimeLabel + '</p></div></div>' : '') + '<div class="p-4 rounded-2xl border border-emerald-100 bg-emerald-50/30 flex items-center gap-4 text-emerald-700"><i class="fas fa-stopwatch text-lg"></i><div><p class="text-[8px] font-black uppercase tracking-widest opacity-60">Total Waktu Tugas</p><p class="text-xs font-black">' + formatDuration(s.checkIn.timestamp, s.checkOut.timestamp) + '</p></div></div>' : '') + '</div><div class="space-y-6"><div class="bg-white rounded-3xl border border-slate-100 p-4 shadow-sm"><div class="flex items-center gap-4 mb-4"><img src="' + s.checkIn.photo + '" class="w-20 h-24 rounded-2xl object-cover shadow-md"><div><p class="text-xl font-black text-slate-800">' + s.checkIn.time + '</p><p class="text-[9px] text-slate-400 font-bold uppercase mt-1">In GPS</p></div></div><div id="map-in-' + s.id + '" class="detail-map" onclick="openExplorer(\'' + s.id + '\')"></div></div>' + (s.checkOut ? '<div class="bg-white rounded-3xl border border-slate-100 p-4 shadow-sm"><div class="flex items-center gap-4 mb-4"><img src="' + s.checkOut.photo + '" class="w-20 h-24 rounded-2xl object-cover shadow-md"><div><p class="text-xl font-black text-slate-800">' + s.checkOut.time + '</p><p class="text-[9px] text-slate-400 font-bold mt-1 uppercase">Out GPS</p></div></div><div class="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-100"><p class="text-[9px] font-black text-slate-400 uppercase mb-1">Remarks</p><p class="text-xs font-medium text-slate-700 whitespace-pre-wrap">' + (s.checkOut.remarks || '-') + '</p>' + (s.checkOut.workPhoto ? '<img src="' + s.checkOut.workPhoto + '" class="w-full h-32 object-cover rounded-xl mt-4 border border-slate-200">' : '') + '</div><div id="map-out-' + s.id + '" class="detail-map" onclick="openExplorer(\'' + s.id + '\')"></div></div>' : '') + '</div>';
+            // Pastikan timestamp dikonversi ke angka sebelum dibuat objek Date
+            const tsIn = Number(s.checkIn.timestamp);
+            const dateIn = isNaN(tsIn) ? new Date() : new Date(tsIn);
+            const dsIn = dateIn.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            
+            let dsOut = "-";
+            if (s.checkOut && s.checkOut.timestamp) {
+                const tsOut = Number(s.checkOut.timestamp);
+                const dateOut = isNaN(tsOut) ? new Date() : new Date(tsOut);
+                dsOut = dateOut.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            }
 
-            document.getElementById('detail-modal').classList.remove('hidden-element');
+            // Ambil data user untuk foto profil
+            const userData = users.find(u => u.id == s.userId);
+            const profilePic = userData && userData.profilePic ? userData.profilePic : 'https://lh3.googleusercontent.com/d/14XvFbNETCuybdeUeH6BPrPaC33uBijMc';
+            
+            // Format Waktu Menggunakan Fungsi Global formatTime
+            const checkInTime = formatTime(s.checkIn.time);
+            const checkOutTime = s.checkOut ? formatTime(s.checkOut.time) : 'AKTIF';
+
+            // LOGIKA PENGHITUNGAN TOTAL WAKTU KERJA
+            let totalWorkDuration = "0j 0m 0s";
+            if (s.checkOut && s.checkOut.timestamp) {
+                const diff = Number(s.checkOut.timestamp) - Number(s.checkIn.timestamp);
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const sec = Math.floor((diff % 60000) / 1000);
+                totalWorkDuration = h + "j " + m + "m " + sec + "s";
+            } else {
+                totalWorkDuration = "Sedang Berlangsung";
+            }
+
+            const modal = document.getElementById('detail-modal'),
+                  content = document.getElementById('detail-content');
+
+            content.innerHTML = `
+                ${currentUser.role === 'admin' ? `
+                <div class="flex gap-2 mb-6">
+                    <button onclick="editLog('${s.id}')" class="flex-grow py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black shadow-lg uppercase tracking-widest">Edit Data</button>
+                    <button onclick="deleteLog('${s.id}')" class="px-6 py-4 bg-red-50 text-red-500 rounded-2xl text-[10px] font-black border border-red-100 uppercase">Hapus</button>
+                </div>` : ''}
+
+                <div class="bg-slate-900 p-5 rounded-[2.5rem] mb-6 flex items-center gap-4 shadow-xl border border-slate-800">
+                    <img src="${profilePic}" class="w-14 h-14 rounded-2xl object-cover border-2 border-slate-700">
+                    <div>
+                        <h3 class="text-white font-black text-sm uppercase tracking-tight">${s.userName}</h3>
+                        <p class="text-blue-400 text-[9px] font-bold uppercase tracking-widest">${s.userPosition} • ${s.userDivision}</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4">
+                    <!-- CHECK IN CARD -->
+                    <div class="bg-white p-5 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-4 py-1.5 bg-blue-50 text-blue-600 rounded-full text-[8px] font-black uppercase tracking-widest italic">Check In Evidence</span>
+                            <span class="text-[9px] font-bold text-slate-400">${dsIn}</span>
+                        </div>
+                        
+                        <!-- ADDED: Indikator Status Waktu Check In -->
+                        <div class="mb-4 p-3 ${s.statusIn === 'Terlambat' ? 'bg-red-50 border-red-100 text-red-600' : 'bg-emerald-50 border-emerald-100 text-emerald-600'} border rounded-2xl flex items-center justify-between">
+                            <p class="text-[9px] font-black uppercase tracking-widest">Status Kedatangan</p>
+                            <p class="text-[10px] font-black italic">${s.statusIn || 'Hadir Tepat Waktu'}</p>
+                        </div>
+
+                        <!-- REVISI: Munculkan Alasan Terlambat jika status Terlambat -->
+                        ${s.statusIn === 'Terlambat' ? `
+                        <div class="mb-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Alasan Terlambat</p>
+                            <p class="text-[10px] font-bold text-red-600 italic justify-text">${s.lateReason || "-"}</p>
+                        </div>` : ''}
+                        
+                        <!-- Tambahan: Munculkan Alasan Luar Area jika Outside Area -->
+                        ${!s.checkIn.isWithinRadius ? `
+                        <div class="mb-4 p-4 bg-orange-50 border border-orange-100 rounded-2xl">
+                            <p class="text-[8px] font-black text-orange-400 uppercase tracking-widest mb-1">Alasan Luar Area (Check In)</p>
+                            <p class="text-[10px] font-bold text-orange-700 italic justify-text">${s.outsideOfficeReason || "-"}</p>
+                        </div>` : ''}
+
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <img src="${s.checkIn.photo}" class="w-full aspect-square object-cover rounded-2xl border-2 border-slate-50">
+                            <div id="map-in-${s.id}" onclick="openExplorer('${s.id}')" class="w-full aspect-square rounded-2xl border-2 border-slate-50 bg-slate-50 overflow-hidden cursor-pointer active:scale-95 transition-all"></div>
+                        </div>
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <p class="text-[7px] font-black text-slate-300 uppercase tracking-widest">Time Registered</p>
+                                <p class="text-xl font-black text-slate-800 leading-none">${checkInTime}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[7px] font-black text-slate-300 uppercase tracking-widest">Status Radius</p>
+                                <p class="text-[9px] font-black ${s.checkIn.isWithinRadius ? 'text-green-500' : 'text-red-500'} uppercase">${s.checkIn.isWithinRadius ? 'Inside Area' : 'Outside Area'}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CHECK OUT CARD -->
+                    ${s.checkOut ? `
+                    <div class="bg-white p-5 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-4 py-1.5 bg-orange-50 text-orange-600 rounded-full text-[8px] font-black uppercase tracking-widest italic">Check Out Evidence</span>
+                            <span class="text-[9px] font-bold text-slate-400">${dsOut}</span>
+                        </div>
+
+                        <!-- Status Kepulangan -->
+                        <div class="mb-4 p-3 ${s.checkOut.statusOut === 'Pulang Tepat Waktu' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : s.checkOut.statusOut === 'Lembur' ? 'bg-blue-50 border-blue-100 text-blue-600' : 'bg-orange-50 border-orange-100 text-orange-600'} border rounded-2xl flex items-center justify-between">
+                            <p class="text-[9px] font-black uppercase tracking-widest">Status Kepulangan</p>
+                            <p class="text-[10px] font-black italic">${s.checkOut.statusOut || '-'}</p>
+                        </div>
+
+                        <!-- Alasan Lembur / Pulang Awal -->
+                        ${s.checkOut.statusReason ? `
+                        <div class="mb-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Keterangan Status</p>
+                            <p class="text-[10px] font-bold text-slate-700 italic justify-text">${s.checkOut.statusReason}</p>
+                        </div>` : ''}
+
+                        <!-- Alasan Luar Area (Check Out) -->
+                        ${!s.checkOut.isWithinRadius ? `
+                        <div class="mb-4 p-4 bg-orange-50 border border-orange-100 rounded-2xl">
+                            <p class="text-[8px] font-black text-orange-400 uppercase tracking-widest mb-1">Alasan Luar Area (Check Out)</p>
+                            <p class="text-[10px] font-bold text-orange-700 italic justify-text">${s.checkOut.outsideReason || "-"}</p>
+                        </div>` : ''}
+
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <img src="${s.checkOut.photo}" class="w-full aspect-square object-cover rounded-2xl border-2 border-slate-50">
+                            <div id="map-out-${s.id}" onclick="openExplorer('${s.id}')" class="w-full aspect-square rounded-2xl border-2 border-slate-50 bg-slate-50 overflow-hidden cursor-pointer active:scale-95 transition-all"></div>
+                        </div>
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <p class="text-[7px] font-black text-slate-300 uppercase tracking-widest">Time Registered</p>
+                                <p class="text-xl font-black text-slate-800 leading-none">${checkOutTime}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[7px] font-black text-slate-300 uppercase tracking-widest">Status Radius</p>
+                                <p class="text-[9px] font-black ${s.checkOut.isWithinRadius ? 'text-green-500' : 'text-red-500'} uppercase">${s.checkOut.isWithinRadius ? 'Inside Area' : 'Outside Area'}</p>
+                            </div>
+                        </div>
+
+                         <!-- REVISI: DOKUMENTASI KEGIATAN (FOTO KERJA & REMARKS) -->
+                    ${s.checkOut && s.checkOut.workPhoto ? `
+                    <div class="bg-white p-5 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-full text-[8px] font-black uppercase tracking-widest italic">Dokumentasi Kegiatan</span>
+                        </div>
+                        <div class="w-full aspect-video rounded-2xl overflow-hidden border-2 border-slate-50 shadow-sm mb-4">
+                            <img src="${s.checkOut.workPhoto}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Laporan Pekerjaan (Remarks)</p>
+                            <p class="text-[10px] font-medium text-slate-700 leading-relaxed whitespace-pre-wrap">${s.checkOut.remarks || "-"}</p>
+                        </div>
+                    </div>` : ''}
+
+                    </div>` : `
+                    <div class="p-8 border-2 border-dashed border-slate-100 rounded-[2.5rem] text-center">
+                        <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Personnel Still On Duty</p>
+                    </div>`}
+                </div>
+
+                <div class="mt-6 bg-slate-50 p-5 rounded-[2rem] border border-slate-100">
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">Rincian & Durasi Tugas</p>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="bg-white p-3 rounded-2xl border border-slate-100">
+                                <p class="text-[7px] font-black text-slate-400 uppercase">Tipe Kerja</p>
+                                <p class="text-[10px] font-bold text-slate-700 truncate">${s.workType || "-"}</p>
+                            </div>
+                            <div class="bg-white p-3 rounded-2xl border border-slate-100">
+                                <p class="text-[7px] font-black text-slate-400 uppercase">Tugas Sebagai</p>
+                                <p class="text-[10px] font-bold text-slate-700 truncate">${s.dutyAs || "-"}</p>
+                            </div>
+                            <div class="bg-blue-600 p-3 rounded-2xl shadow-lg shadow-blue-100">
+                                <p class="text-[7px] font-black text-white/70 uppercase">Total Durasi</p>
+                                <p class="text-[10px] font-black text-white">${totalWorkDuration}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            modal.classList.remove('hidden-element');
+
+            // Inisialisasi Peta satelit
             setTimeout(() => {
-                const mapI = L.map("map-in-" + s.id, {
-                    zoomControl: false,
-                    attributionControl: false
-                }).setView([s.checkIn.lat, s.checkIn.lng], 17);
-                getSatelliteLayer().addTo(mapI);
-                L.circleMarker([s.checkIn.lat, s.checkIn.lng], {
-                    radius: 6,
-                    fillColor: "#3b82f6",
-                    color: "#fff",
-                    weight: 2,
-                    fillOpacity: 1
-                }).addTo(mapI);
-                if (s.checkOut) {
-                    const mapO = L.map("map-out-" + s.id, {
-                        zoomControl: false,
-                        attributionControl: false
-                    }).setView([s.checkOut.lat || s.checkIn.lat, s.checkOut.lng || s.checkIn.lng], 17);
-                    getSatelliteLayer().addTo(mapO);
-                    L.circleMarker([s.checkOut.lat || s.checkIn.lat, s.checkOut.lng || s.checkIn.lng], {
-                        radius: 6,
-                        fillColor: "#f97316",
-                        color: "#fff",
-                        weight: 2,
-                        fillOpacity: 1
-                    }).addTo(mapO);
+                if (L.DomUtil.get(`map-in-${s.id}`)) {
+                    const mapIn = L.map(`map-in-${s.id}`, { zoomControl: false, attributionControl: false }).setView([s.checkIn.lat, s.checkIn.lng], 16);
+                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(mapIn);
+                    L.marker([s.checkIn.lat, s.checkIn.lng]).addTo(mapIn);
                 }
-            }, 300);
+
+                if (s.checkOut && L.DomUtil.get(`map-out-${s.id}`)) {
+                    const mapOut = L.map(`map-out-${s.id}`, { zoomControl: false, attributionControl: false }).setView([s.checkOut.lat, s.checkOut.lng], 16);
+                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(mapOut);
+                    L.marker([s.checkOut.lat, s.checkOut.lng]).addTo(mapOut);
+                }
+            }, 500);
         };
 
         window.openExplorer = function(id) {
             const s = dutyHistory.find(x => x.id == id);
             if (!s) return;
+            
+            const distEl = document.getElementById('explorer-distance-text');
+            const navCont = document.getElementById('explorer-nav-buttons');
+            if(distEl) distEl.textContent = "Checking GPS...";
+            if(navCont) navCont.innerHTML = "";
+
             document.getElementById('explorer-modal').classList.remove('hidden-element');
+            
             if (!explorerMap) {
-                explorerMap = L.map('full-explorer-map').setView([s.checkIn.lat, s.checkIn.lng], 15);
-                getSatelliteLayer().addTo(explorerMap);
+                explorerMap = L.map('full-explorer-map', { zoomControl: false, attributionControl: false }).setView([s.checkIn.lat, s.checkIn.lng], 15);
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(explorerMap);
             }
+            
+            // Bersihkan marker lama
             explorerMarkers.forEach(m => explorerMap.removeLayer(m));
             explorerMarkers = [];
-            const ci = L.marker([s.checkIn.lat, s.checkIn.lng]).addTo(explorerMap).bindPopup("In: " + s.checkIn.time).openPopup();
+
+            // Marker Check In
+            const ci = L.marker([s.checkIn.lat, s.checkIn.lng]).addTo(explorerMap)
+                        .bindPopup("<div class='text-[10px] font-bold'>CHECK IN POINT</div><div class='text-[9px]'>" + s.checkIn.time + "</div>");
             explorerMarkers.push(ci);
-            if (s.checkOut) {
-                const co = L.marker([s.checkOut.lat || s.checkIn.lat, s.checkOut.lng || s.checkIn.lng]).addTo(explorerMap).bindPopup("Out: " + s.checkOut.time);
+
+            // Tombol Navigasi Google Maps (Check In)
+            if(navCont) {
+                navCont.insertAdjacentHTML('beforeend', `<button onclick="window.open('https://www.google.com/maps?q=${s.checkIn.lat},${s.checkIn.lng}', '_blank')" class="flex-grow py-4 bg-white/90 backdrop-blur-md text-slate-800 rounded-2xl text-[10px] font-black shadow-xl border border-slate-100 uppercase tracking-tighter">Navigate In</button>`);
+            }
+
+            if (s.checkOut && s.checkOut.lat) {
+                // Marker Check Out
+                const co = L.marker([s.checkOut.lat, s.checkOut.lng]).addTo(explorerMap)
+                            .bindPopup("<div class='text-[10px] font-bold'>CHECK OUT POINT</div><div class='text-[9px]'>" + s.checkOut.time + "</div>");
                 explorerMarkers.push(co);
-                const p = L.polyline([
-                    [s.checkIn.lat, s.checkIn.lng],
-                    [s.checkOut.lat || s.checkIn.lat, s.checkOut.lng || s.checkIn.lng]
-                ], {
-                    color: 'white',
-                    weight: 4,
-                    dashArray: '10, 10'
+
+                // Garis Track (Polyline)
+                const p = L.polyline([[s.checkIn.lat, s.checkIn.lng], [s.checkOut.lat, s.checkOut.lng]], {
+                    color: '#3b82f6',
+                    weight: 6,
+                    opacity: 0.9,
+                    dashArray: '12, 12'
                 }).addTo(explorerMap);
                 explorerMarkers.push(p);
-                explorerMap.fitBounds(p.getBounds(), {
-                    padding: [80, 80]
-                });
+
+                // Hitung Jarak via haversine (reuse getDistance)
+                const distance = getDistance(s.checkIn.lat, s.checkIn.lng, s.checkOut.lat, s.checkOut.lng);
+                const distanceText = distance < 1000 ? Math.round(distance) + " Meter" : (distance / 1000).toFixed(2) + " KM";
+                if(distEl) distEl.textContent = "Jarak: " + distanceText;
+
+                // Tombol Navigasi Google Maps (Check Out)
+                if(navCont) {
+                    navCont.insertAdjacentHTML('beforeend', `<button onclick="window.open('https://www.google.com/maps?q=${s.checkOut.lat},${s.checkOut.lng}', '_blank')" class="flex-grow py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black shadow-xl uppercase tracking-tighter">Navigate Out</button>`);
+                }
+
+                // Auto Zoom menyesuaikan kedua titik
+                explorerMap.fitBounds(p.getBounds(), { padding: [100, 100] });
             } else {
+                if(distEl) distEl.textContent = "Sedang Bertugas";
                 explorerMap.setView([s.checkIn.lat, s.checkIn.lng], 17);
+                ci.openPopup();
             }
-            setTimeout(() => explorerMap.invalidateSize(), 200);
+            
+            setTimeout(() => explorerMap.invalidateSize(), 300);
         };
 
         window.closeExplorer = function() {
@@ -2746,12 +3014,11 @@
             s.workType = document.getElementById('edit-log-work-type').value;
             s.dutyAs = document.getElementById('edit-log-duty-as').value;
             
-            // Konversi kembali dari string datetime ke timestamp dan display string time
             const inTimeVal = document.getElementById('edit-log-in-time').value;
             if (inTimeVal) {
                 const inDate = new Date(inTimeVal);
                 s.checkIn.timestamp = inDate.getTime();
-                s.checkIn.time = inDate.toLocaleTimeString('id-ID', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                s.checkIn.time = inDate.toLocaleTimeString('id-ID', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
             }
 
             s.checkIn.lat = parseFloat(document.getElementById('edit-log-in-lat').value);
@@ -2765,7 +3032,7 @@
                 if (outTimeVal) {
                     const outDate = new Date(outTimeVal);
                     s.checkOut.timestamp = outDate.getTime();
-                    s.checkOut.time = outDate.toLocaleTimeString('id-ID', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    s.checkOut.time = outDate.toLocaleTimeString('id-ID', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
                 }
 
                 s.checkOut.lat = parseFloat(document.getElementById('edit-log-out-lat').value);
@@ -2844,7 +3111,7 @@
                 // MERAKIT BARIS TABEL (Susunan Kolom Diubah)
                 html += '<tr><td>' + (i + 1) + '</td><td style="text-align:left">' + s.userName + '</td><td>' + (s.userDivision || '-') + '</td><td>' + (s.userPosition || '-') + '</td><td>' + dsIn + '</td><td>' + s.checkIn.time + '</td><td>' + dsOut + '</td><td>' + (s.checkOut ? s.checkOut.time : '-') + '</td><td>' + dur + '</td><td>' + s.workType + ' / ' + s.dutyAs + '</td><td class="remarks-cell">' + (s.checkOut ? s.checkOut.remarks : '-') + '</td></tr>';
             });
-            html += '</tbody></table><div class="footer"><p>Dicetak pada: ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear() + ', pukul ' + now.toLocaleTimeString('id-ID') + '</p><p>Penanggung Jawab,</p><img src="https://lh3.googleusercontent.com/d/1yhAmuOoGe6GT4UaJEixJi4cadHbUfXTL" class="signature-img"><p><u><b>Media Marbun</b></u></p><p>HRD Manager</p></div></body></html>';
+            html += '</tbody></table><div class="footer"><p>Dicetak pada: ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear() + ', pukul ' + now.toLocaleTimeString('id-ID').replace(/\./g, ':') + '</p><p>Penanggung Jawab,</p><img src="https://lh3.googleusercontent.com/d/1yhAmuOoGe6GT4UaJEixJi4cadHbUfXTL" class="signature-img"><p><u><b>Media Marbun</b></u></p><p>HRD Manager</p></div></body></html>';
             printWin.document.write(html);
             printWin.document.close();
             setTimeout(() => {
@@ -2962,7 +3229,6 @@
                     self.addEventListener('install', (e) => { self.skipWaiting(); }); 
                     self.addEventListener('activate', (e) => { e.waitUntil(clients.claim()); }); 
                     self.addEventListener('fetch', (e) => { 
-                        // Bypass cache completely for navigation to ensure latest version
                         if (e.request.mode === 'navigate') {
                             e.respondWith(
                                 fetch(e.request).catch(() => caches.match(e.request))
@@ -2972,7 +3238,6 @@
                 `;
                 const swBlob = new Blob([swCode], {type: 'application/javascript'});
                 navigator.serviceWorker.register(URL.createObjectURL(swBlob)).then(registration => {
-                    // Paksa update SW setiap kali aplikasi dibuka
                     registration.update();
                 }).catch(console.warn);
             }
