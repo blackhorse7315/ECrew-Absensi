@@ -1321,34 +1321,44 @@
         // MEDIA HANDLERS
         async function initCamera() {
             try {
-                if (videoStream) videoStream.getTracks().forEach(t => t.stop());
-                const constraints = {
-                    video: {
-                        facingMode: "user",
-                        width: {
-                            ideal: 640
-                        },
-                        height: {
-                            ideal: 640
-                        }
-                    }
-                };
-                videoStream = await navigator.mediaDevices.getUserMedia(constraints);
-                const video = document.getElementById('camera-preview');
-                if (video) {
-                    video.srcObject = videoStream;
-                    video.onloadedmetadata = () => video.play();
-                }
-            } catch (err) {
-                showFormError("Gagal mengakses kamera. Mohon izinkan akses kamera.");
-            }
+        if (videoStream) {
+            videoStream.getTracks().forEach(t => t.stop());
         }
-
+        
+        // Batasi resolusi ideal ke 480p agar rendering Canvas sangat ringan di semua perangkat
+        const constraints = {
+            video: {
+                facingMode: "user",
+                width: { ideal: 640 },
+                height: { ideal: 480 }
+            },
+            audio: false
+        };
+                videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+        const video = document.getElementById('camera-preview');
+        const resultImg = document.getElementById('photo-result');
+        
+        if (video) {
+            // Bersihkan status visual element
+            video.classList.remove('hidden-element');
+            if (resultImg) resultImg.classList.add('hidden-element');
+            
+            video.srcObject = videoStream;
+            // Jalankan paksa putar video (Penting untuk iOS Safari)
+            await video.play();
+        }
+    } catch (err) {
+        console.error("Gagal akses kamera:", err);
+        showFormError("Gagal mengakses kamera. Mohon izinkan akses kamera perangkat Anda.");
+    }
+}
+        
         window.takeSnapshot = function() {
-            const video = document.getElementById('camera-preview'),
-                canvas = document.getElementById('photo-canvas'),
-                resultImg = document.getElementById('photo-result');
-            if (!video || !video.videoWidth) return;
+    const video = document.getElementById('camera-preview');
+    const canvas = document.getElementById('photo-canvas');
+    const resultImg = document.getElementById('photo-result');
+    
+    if (!video || !video.videoWidth || !videoStream) return;
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
@@ -1356,29 +1366,47 @@
             ctx.scale(-1, 1);
             ctx.drawImage(video, 0, 0);
             // PERCEPATAN 3: Turunkan kualitas selfie agar pengiriman sangat ringan
-            capturedPhoto = canvas.toDataURL('image/jpeg', 0.5); 
-            resultImg.src = capturedPhoto;
-            video.classList.add('hidden-element');
-            resultImg.classList.remove('hidden-element');
-            document.getElementById('btn-capture').classList.add('hidden-element');
-            document.getElementById('btn-retake').classList.remove('hidden-element');
-            document.getElementById('btn-submit').classList.remove('btn-disabled');
-        };
+            capturedPhoto = canvas.toDataURL('image/jpeg', 0.6); 
+            // Munculkan foto di atas lapisan video tanpa mengubah display video (mencegah crash iOS)
+    if (resultImg) {
+        resultImg.src = capturedPhoto;
+        resultImg.classList.remove('hidden-element');
+    }
+    
+    // Cukup pause video stream, jangan di-hide
+    video.pause();
+    
+    // Atur visibilitas tombol kontrol form
+    document.getElementById('btn-capture').classList.add('hidden-element');
+    document.getElementById('btn-retake').classList.remove('hidden-element');
+    document.getElementById('btn-submit').classList.remove('btn-disabled');
+};
 
         window.resetCamera = function() {
             capturedPhoto = null;
             const preview = document.getElementById('camera-preview');
             const result = document.getElementById('photo-result');
+            const video = document.getElementById('camera-preview');
+            const resultImg = document.getElementById('photo-result');
             const btnCap = document.getElementById('btn-capture');
             const btnRet = document.getElementById('btn-retake');
             const btnSub = document.getElementById('btn-submit');
 
             if (preview) preview.classList.remove('hidden-element');
-            if (result) result.classList.add('hidden-element');
-            if (btnCap) btnCap.classList.remove('hidden-element');
-            if (btnRet) btnRet.classList.add('hidden-element');
-            if (btnSub) btnSub.classList.add('btn-disabled');
-        };
+            // Sembunyikan lapisan foto hasil jepretan
+    if (resultImg) {
+        resultImg.classList.add('hidden-element');
+        resultImg.src = "";
+    }
+    // Mainkan kembali live stream video secara instan tanpa reload modul kamera
+    if (video && videoStream) {
+        video.play().catch(err => console.log("Gagal play stream video:", err));
+    }
+            // Kembalikan status tombol kontrol form
+    document.getElementById('btn-capture').classList.remove('hidden-element');
+    document.getElementById('btn-retake').classList.add('hidden-element');
+    document.getElementById('btn-submit').classList.add('btn-disabled');
+};
 
         // AUTH & VIEWS
         function handleLogin() {
@@ -2781,6 +2809,16 @@
                             <p class="text-[9px] font-black uppercase tracking-widest">Status Kepulangan</p>
                             <p class="text-[10px] font-black italic">${s.checkOut.statusOut || '-'}</p>
                         </div>
+
+                        <!-- TAMBAHAN: Durasi Lembur -->
+                        ${s.checkOut.overtimeLabel ? `
+                        <div class="mb-4 p-3 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-between shadow-sm">
+                            <div class="flex items-center gap-2 text-indigo-600">
+                                <i class="fas fa-business-time text-base"></i>
+                                <p class="text-[9px] font-black uppercase tracking-widest">Durasi Lembur Terdeteksi</p>
+                            </div>
+                            <p class="text-[11px] font-black text-indigo-700">${s.checkOut.overtimeLabel}</p>
+                        </div>` : ''}
 
                         <!-- Alasan Lembur / Pulang Awal -->
                         ${s.checkOut.statusReason ? `
