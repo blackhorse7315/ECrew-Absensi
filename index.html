@@ -882,6 +882,14 @@
                         <input type="text" id="reg-password" class="w-full p-4 bg-slate-50 rounded-2xl outline-none text-sm font-bold border border-slate-100">
                     </div>
                 </div>
+                <!-- TAMBAHAN: Kolom URL Tanda Tangan -->
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase mb-2 block">URL Tanda Tangan (Opsional)</label>
+                    <input type="url" id="reg-signature" oninput="handleSignatureUrl(this)" class="w-full p-4 bg-slate-50 rounded-2xl outline-none text-sm font-bold border border-slate-100" placeholder="Tempel link Google Drive gambar tanda tangan...">
+                    <div id="signature-preview-container" class="mt-3 hidden-element border-2 border-dashed border-slate-200 rounded-2xl p-2 bg-slate-50 flex justify-center">
+                        <img id="signature-preview" class="max-h-24 object-contain">
+                    </div>
+                </div>
                 <div class="flex gap-3 pt-4">
                     <button onclick="saveUser()" class="flex-grow py-4 gradient-bg text-white rounded-2xl font-bold shadow-lg transition-opacity hover:opacity-90">SIMPAN</button>
                     <button id="btn-delete-user" onclick="handleDeleteUser()" class="hidden-element px-6 py-4 bg-red-50 text-red-500 rounded-2xl font-bold border border-red-100"><i class="fas fa-trash"></i></button>
@@ -1009,7 +1017,7 @@
     </div>
 
     <script>
-        const webAppUrl = "https://script.google.com/macros/s/AKfycbxPz74lH6-mVAoWvHUN-tVbn6-Vm7gqhFiXrfsw63rrfmARGFvuopgnyVgGgUOGqm9iWg/exec";
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbxXkzOEvmHECTbxAA-i_6vaThIUYRdPOL9PRjJRUiHfso9k7dw1Vj01sgPv1pYzrMFsiQ/exec";
 
         // APP STATE
         let users = [];
@@ -2037,6 +2045,12 @@
             document.getElementById('reg-email').value = "";
             document.getElementById('reg-username').value = "";
             document.getElementById('reg-password').value = "";
+            
+            // TAMBAHAN: Reset Kolom Tanda Tangan
+            document.getElementById('reg-signature').value = "";
+            document.getElementById('signature-preview-container').classList.add('hidden-element');
+            document.getElementById('signature-preview').src = "";
+            
             profilePicBase64 = null;
             document.getElementById('profile-pic-preview').classList.add('hidden-element');
             document.getElementById('profile-pic-placeholder').classList.remove('hidden-element');
@@ -2066,6 +2080,14 @@
                     document.getElementById('reg-email').value = u.email;
                     document.getElementById('reg-username').value = u.username;
                     document.getElementById('reg-password').value = u.password;
+                    
+                    // TAMBAHAN: Tampilkan Tanda Tangan jika ada
+                    if (u.signature) {
+                        document.getElementById('reg-signature').value = u.signature;
+                        document.getElementById('signature-preview').src = u.signature;
+                        document.getElementById('signature-preview-container').classList.remove('hidden-element');
+                    }
+                    
                     if (u.profilePic) {
                         profilePicBase64 = u.profilePic;
                         document.getElementById('profile-pic-preview').src = u.profilePic;
@@ -2110,6 +2132,10 @@
             const email = document.getElementById('reg-email').value,
                 user = document.getElementById('reg-username').value,
                 pass = document.getElementById('reg-password').value;
+            
+            // Ambil Data Tanda Tangan
+            const signatureUrl = document.getElementById('reg-signature').value.trim();
+            
             if (!name || !rank || !jabatan || !divisi || !user || !pass) {
                 alert("Wajib diisi!");
                 return;
@@ -2124,7 +2150,8 @@
                 email,
                 username: user,
                 password: pass,
-                profilePic: profilePicBase64
+                profilePic: profilePicBase64,
+                signature: signatureUrl // Simpan data Tanda Tangan ke server
             };
             
             // Optimistic update User
@@ -2148,6 +2175,32 @@
                 renderUserList();
                 await callCloud("deleteUser", { id: idNum });
             }
+        };
+
+        // TAMBAHAN: Fungsi Konversi URL Google Drive
+        window.handleSignatureUrl = function(input) {
+            let url = input.value.trim();
+            const previewCont = document.getElementById('signature-preview-container');
+            const previewImg = document.getElementById('signature-preview');
+            
+            if (!url) {
+                previewCont.classList.add('hidden-element');
+                return;
+            }
+
+            // Deteksi link Google Drive dan ambil File ID-nya
+            const driveRegex = /(?:drive\.google\.com\/file\/d\/|drive\.google\.com\/open\?id=)([\w-]+)/;
+            const match = url.match(driveRegex);
+
+            if (match && match[1]) {
+                const fileId = match[1];
+                url = `https://lh3.googleusercontent.com/d/${fileId}`;
+                input.value = url; // Ganti input dengan format URL langsung
+            }
+
+            // Tampilkan Preview
+            previewImg.src = url;
+            previewCont.classList.remove('hidden-element');
         };
 
         // USER FUNCTIONS
@@ -3129,9 +3182,27 @@
 
             const now = new Date(),
                 printWin = window.open('', '_blank');
+                
+            // TAMBAHAN: Logika untuk memanggil Nama Karyawan dan Tanda Tangannya
+            let employeeName = "Karyawan";
+            let employeeSignatureHtml = '<div style="height:80px; margin:10px auto;"></div>'; // Blank space
             
-            // PERUBAHAN HEADER TABEL: Susunan Kolom Diubah
-            let html = '<html><head><title>Laporan Kehadiran E-Crew</title><style>body{font-family:sans-serif;padding:30px;color:#333}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #ccc;padding:8px;font-size:10px;vertical-align:top}th{background-color:#f8f9fa;text-align:center;font-size:10px}td{text-align:center}.header{text-align:center;border-bottom:2px solid #333;padding-bottom:10px;margin-bottom:30px}.header h1{font-size:14px;margin:10px 0}.header p{font-size:12px;margin:5px 0}.footer{margin-top:60px;float:right;text-align:center;width:250px;font-size:11px}.footer p{margin:5px 0}.remarks-cell{white-space:pre-wrap;word-wrap:break-word;max-width:250px;text-align:left}.logo-container{text-align:center;margin-bottom:10px}.logo-container img{height:70px;width:auto}.signature-img{height:80px;width:auto;margin:10px auto;display:block;}</style></head><body><div class="logo-container"><img src="https://lh3.googleusercontent.com/d/1WNcGjsZ9_Fp54xzOl01EYRqM6-wY5Zh7" alt="Logo"></div><div class="header"><h1>LAPORAN KEHADIRAN KARYAWAN</h1><p>Sistem E-Crew Attendant List</p><p>Periode: ' + formatLongIndo(startVal) + ' s/d ' + formatLongIndo(endVal) + '</p></div><table><thead><tr><th>No</th><th>Nama Karyawan</th><th>Divisi</th><th>Jabatan</th><th>Tanggal Check In</th><th>Check In</th><th>Tanggal Check Out</th><th>Check Out</th><th>Total Waktu Tugas</th><th>Type of Work/Duty Function</th><th>Detail Pekerjaan</th></tr></thead><tbody>';
+            const rawNameQuery = document.getElementById('filter-all-name').value.trim();
+            if (rawNameQuery) {
+                const matchedUser = users.find(u => u.name && u.name.toLowerCase().includes(rawNameQuery.toLowerCase()));
+                if (matchedUser) {
+                    employeeName = matchedUser.name;
+                    // Jika ada data link Tanda Tangan, maka tampilkan
+                    if (matchedUser.signature) {
+                        employeeSignatureHtml = '<img src="' + matchedUser.signature + '" class="signature-img">';
+                    }
+                } else {
+                    employeeName = rawNameQuery;
+                }
+            }
+            
+            // PERUBAHAN HEADER TABEL & CSS FOOTER: Susunan Kolom Diubah, Tambah Footer Left (Karyawan)
+            let html = '<html><head><title>Laporan Kehadiran E-Crew</title><style>body{font-family:sans-serif;padding:30px;color:#333}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #ccc;padding:8px;font-size:10px;vertical-align:top}th{background-color:#f8f9fa;text-align:center;font-size:10px}td{text-align:center}.header{text-align:center;border-bottom:2px solid #333;padding-bottom:10px;margin-bottom:30px}.header h1{font-size:14px;margin:10px 0}.header p{font-size:12px;margin:5px 0}.footer-container{margin-top:60px;width:100%;display:block;page-break-inside:avoid;font-size:11px}.footer-box{width:250px;text-align:center;float:left}.footer-box.right{float:right}.footer-box p{margin:5px 0}.remarks-cell{white-space:pre-wrap;word-wrap:break-word;max-width:250px;text-align:left}.logo-container{text-align:center;margin-bottom:10px}.logo-container img{height:70px;width:auto}.signature-img{height:80px;width:auto;margin:10px auto;display:block;}</style></head><body><div class="logo-container"><img src="https://lh3.googleusercontent.com/d/1WNcGjsZ9_Fp54xzOl01EYRqM6-wY5Zh7" alt="Logo"></div><div class="header"><h1>LAPORAN KEHADIRAN KARYAWAN</h1><p>Sistem E-Crew Attendant List</p><p>Periode: ' + formatLongIndo(startVal) + ' s/d ' + formatLongIndo(endVal) + '</p></div><table><thead><tr><th>No</th><th>Nama Karyawan</th><th>Divisi</th><th>Jabatan</th><th>Tanggal Check In</th><th>Check In</th><th>Tanggal Check Out</th><th>Check Out</th><th>Total Waktu Tugas</th><th>Type of Work/Duty Function</th><th>Detail Pekerjaan</th></tr></thead><tbody>';
 
             filtered.forEach((s, i) => {
                 // FORMAT TANGGAL CHECK IN
@@ -3149,7 +3220,8 @@
                 // MERAKIT BARIS TABEL (Susunan Kolom Diubah)
                 html += '<tr><td>' + (i + 1) + '</td><td style="text-align:left">' + s.userName + '</td><td>' + (s.userDivision || '-') + '</td><td>' + (s.userPosition || '-') + '</td><td>' + dsIn + '</td><td>' + s.checkIn.time + '</td><td>' + dsOut + '</td><td>' + (s.checkOut ? s.checkOut.time : '-') + '</td><td>' + dur + '</td><td>' + s.workType + ' / ' + s.dutyAs + '</td><td class="remarks-cell">' + (s.checkOut ? s.checkOut.remarks : '-') + '</td></tr>';
             });
-            html += '</tbody></table><div class="footer"><p>Dicetak pada: ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear() + ', pukul ' + now.toLocaleTimeString('id-ID').replace(/\./g, ':') + '</p><p>Penanggung Jawab,</p><img src="https://lh3.googleusercontent.com/d/1yhAmuOoGe6GT4UaJEixJi4cadHbUfXTL" class="signature-img"><p><u><b>Media Marbun</b></u></p><p>HRD Manager</p></div></body></html>';
+            // TAMBAHAN FOOTER SEJAJAR: Kiri Karyawan, Kanan HRD
+            html += '</tbody></table><div class="footer-container"><div class="footer-box"><p style="visibility:hidden;">Dicetak pada: ...</p><p>Mengetahui,</p>' + employeeSignatureHtml + '<p><u><b>' + employeeName + '</b></u></p><p>Karyawan</p></div><div class="footer-box right"><p>Dicetak pada: ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear() + ', pukul ' + now.toLocaleTimeString('id-ID').replace(/\./g, ':') + '</p><p>Penanggung Jawab,</p><img src="https://lh3.googleusercontent.com/d/1yhAmuOoGe6GT4UaJEixJi4cadHbUfXTL" class="signature-img"><p><u><b>Media Marbun</b></u></p><p>HRD Manager</p></div></div></body></html>';
             printWin.document.write(html);
             printWin.document.close();
             setTimeout(() => {
