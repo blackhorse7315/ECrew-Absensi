@@ -2082,12 +2082,14 @@
             
             const remarksCont = document.getElementById('checkout-remarks-container');
             const photoCont = document.getElementById('checkout-photo-container');
-            if (mode === 'check-out' && day === 0) {
-                if(remarksCont) remarksCont.classList.add('hidden-element');
-                if(photoCont) photoCont.classList.add('hidden-element');
-            } else {
-                if(remarksCont) remarksCont.classList.remove('hidden-element');
-                if(photoCont) photoCont.classList.remove('hidden-element');
+            
+            if (mode === 'check-out') {
+                if(remarksCont) remarksCont.classList.remove('hidden-element'); // Remarks selalu muncul
+                if (day === 0) {
+                    if(photoCont) photoCont.classList.add('hidden-element'); // Foto sembunyi di hari Minggu
+                } else {
+                    if(photoCont) photoCont.classList.remove('hidden-element');
+                }
             }
 
             if (mode === 'check-in') {
@@ -2254,8 +2256,9 @@
                 speakNotification("Berhasil, anda telah check in.");
             } else {
                 const remarksValue = document.getElementById('remarks').value.trim();
+                if (!remarksValue) { showFormError("Kolom Laporan Pekerjaan (Remarks) wajib diisi!"); return; }
+                
                 if (day !== 0) {
-                    if (!remarksValue) { showFormError("Kolom Laporan Pekerjaan (Remarks) wajib diisi!"); return; }
                     if (!workPhotoBase64) { showFormError("Tambahan foto dokumentasi wajib diunggah!"); return; }
                 }
                 
