@@ -3047,6 +3047,34 @@
             }
         });
 
+        let exitTrapActive = true;
+        
+        // Membangun lapisan history (riwayat semu) untuk menjebak tombol back perangkat
+        window.history.pushState('trap', null, '');
+        window.history.pushState('main', null, '');
+
+        window.addEventListener('popstate', function(e) {
+            if (!exitTrapActive) return;
+            
+            // Langsung kembalikan state untuk menggagalkan efek tombol back (mencegah layar langsung keluar)
+            window.history.pushState('main', null, '');
+            
+            // Tampilkan dialog konfirmasi menggunakan fungsi bawaan kita
+            askConfirm('Apakah Anda yakin ingin keluar dari aplikasi E-Crew?', function() {
+                // Jika klik "Ya", nonaktifkan jebakan dan mundurkan history 2 langkah untuk exit aplikasi yang sesungguhnya
+                exitTrapActive = false;
+                window.history.go(-2);
+            });
+        });
+
+        // Tambahan penjaga (fallback) jika user mencoba refresh halaman atau menutup tab secara tiba-tiba
+        window.addEventListener('beforeunload', function(e) {
+            if (exitTrapActive) {
+                e.preventDefault();
+                e.returnValue = 'Apakah Anda yakin ingin keluar?';
+            }
+        });
+
         window.onload = () => { initPWA(); updateClock(); initRealtimeSync(); };
     </script>
 </body>
